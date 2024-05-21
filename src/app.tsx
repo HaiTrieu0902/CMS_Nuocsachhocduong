@@ -1,125 +1,184 @@
-import { Footer, Question, SelectLang, AvatarDropdown, AvatarName } from '@/components';
-import { LinkOutlined } from '@ant-design/icons';
-import type { Settings as LayoutSettings } from '@ant-design/pro-components';
-import { SettingDrawer } from '@ant-design/pro-components';
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable react-hooks/rules-of-hooks */
+import CaretDown from '@/assets/icons/CaretDown.svg';
+import {
+  AccountActiveIcon,
+  AccountInactiveIcon,
+  AvatarDropdown,
+  DashboardActiveIcon,
+  DashboardInactiveIcon,
+  HomeActiveIcon,
+  HomeInactiveIcon,
+  ListIcon,
+  NewsActiveIcon,
+  NewsInactiveIcon,
+  NotificationActiveIcon,
+  NotificationInactiveIcon,
+  ProductActiveIcon,
+  ProductIactiveIcon,
+  SettingsActiveIcon,
+  SettingsIactiveIcon,
+} from '@/components';
 import type { RunTimeLayoutConfig } from '@umijs/max';
-import { history, Link } from '@umijs/max';
+import { history, useModel } from '@umijs/max';
+import { Col, ConfigProvider, Layout, Row, Typography } from 'antd';
+import { useState } from 'react';
+import { Provider } from 'react-redux';
 import defaultSettings from '../config/defaultSettings';
+import './Global.scss';
+import { ESidebarPath } from './constants/enum';
 import { errorConfig } from './requestErrorConfig';
-import { currentUser as queryCurrentUser } from '@/services/ant-design-pro/api';
-import React from 'react';
-const isDev = process.env.NODE_ENV === 'development';
+import store from './store';
+const { Header } = Layout;
+
 const loginPath = '/user/login';
 
 /**
  * @see  https://umijs.org/zh-CN/plugins/plugin-initial-state
  * */
 export async function getInitialState(): Promise<{
-  settings?: Partial<LayoutSettings>;
-  currentUser?: API.CurrentUser;
+  settings?: any;
   loading?: boolean;
+  currentUser?: string;
   fetchUserInfo?: () => Promise<API.CurrentUser | undefined>;
 }> {
-  const fetchUserInfo = async () => {
-    try {
-      const msg = await queryCurrentUser({
-        skipErrorHandler: true,
-      });
-      return msg.data;
-    } catch (error) {
-      history.push(loginPath);
-    }
-    return undefined;
-  };
-  // 如果不是登录页面，执行
-  const { location } = history;
-  if (location.pathname !== loginPath) {
-    const currentUser = await fetchUserInfo();
+  if (localStorage.getItem('accessToken') && window.location.pathname === loginPath) {
+    history.push('/');
+  }
+  if (window.location.pathname !== loginPath) {
+    const currentUser = localStorage.getItem('accessToken') || undefined;
     return {
-      fetchUserInfo,
-      currentUser,
-      settings: defaultSettings as Partial<LayoutSettings>,
+      currentUser: currentUser,
+      settings: defaultSettings,
     };
   }
-  return {
-    fetchUserInfo,
-    settings: defaultSettings as Partial<LayoutSettings>,
-  };
+
+  return { settings: defaultSettings };
 }
+
+const renderSideBarIcon = (path: string, hasSubmenu = false, isCollapse: boolean) => {
+  const currentPathName = window.location.pathname;
+
+  switch (path) {
+    case ESidebarPath.DASHBOARD:
+      return currentPathName.includes(path) ? <DashboardActiveIcon /> : <DashboardInactiveIcon />;
+    case ESidebarPath.MAINTENANCE:
+      return currentPathName.includes(path) ? <SettingsActiveIcon /> : <SettingsIactiveIcon />;
+    case ESidebarPath.PRODUCT:
+      return currentPathName.includes(path) ? <ProductActiveIcon /> : <ProductIactiveIcon />;
+    case ESidebarPath.NEW:
+      return currentPathName.includes(path) ? <NewsActiveIcon /> : <NewsInactiveIcon />;
+    case ESidebarPath.NOTIFICATION:
+      return currentPathName.includes(path) ? <NotificationActiveIcon /> : <NotificationInactiveIcon />;
+    case ESidebarPath.ACCOUNT:
+      return currentPathName.includes(path) ? <AccountActiveIcon /> : <AccountInactiveIcon />;
+    case ESidebarPath.SCHOOL:
+      return currentPathName.includes(path) ? <HomeActiveIcon /> : <HomeInactiveIcon />;
+
+    default:
+      break;
+  }
+};
 
 // ProLayout 支持的api https://procomponents.ant.design/components/layout
 export const layout: RunTimeLayoutConfig = ({ initialState, setInitialState }) => {
+  const { initialState: initialModelState }: any = useModel('@@initialState');
+  const [isCollapse, setIsCollapse] = useState<boolean>();
+  const json_user = localStorage.getItem('auth');
+  const auth = json_user ? JSON.parse(json_user) : undefined;
+  const src = auth?.avatar || 'https://sport-stretching.s3.us-west-2.amazonaws.com/1702005408_4k-image.jpg';
   return {
-    actionsRender: () => [<Question key="doc" />, <SelectLang key="SelectLang" />],
+    actionsRender: () => [],
+    logo: () => {
+      return <></>;
+    },
     avatarProps: {
-      src: initialState?.currentUser?.avatar,
-      title: <AvatarName />,
+      src: src,
+      title: '',
       render: (_, avatarChildren) => {
-        return <AvatarDropdown>{avatarChildren}</AvatarDropdown>;
+        return (
+          <Provider store={store}>
+            <AvatarDropdown>
+              <div className="header-avatar__container">
+                {avatarChildren}
+                <div className="header-avatar__container">
+                  <Typography.Title className="formTypo" level={5}>
+                    {auth?.fullName || 'Admin'}
+                  </Typography.Title>
+                  <img src={CaretDown} alt={'CaretDown'} />
+                </div>
+              </div>
+            </AvatarDropdown>
+          </Provider>
+        );
       },
     },
-    waterMarkProps: {
-      content: initialState?.currentUser?.name,
+
+    onCollapse: (collapsed: boolean) => {
+      setIsCollapse(collapsed);
     },
-    footerRender: () => <Footer />,
+    // footerRender: () => <Footer />,
+    menuDataRender: (menuList) =>
+      menuList.map((item) => {
+        const hasSubmenu = item.children && item.children.length > 0;
+        const localItem = {
+          ...item,
+          icon: renderSideBarIcon(item.path as string, hasSubmenu, isCollapse as never),
+        };
+        return localItem;
+      }),
+
     onPageChange: () => {
       const { location } = history;
-      // 如果没有登录，重定向到 login
       if (!initialState?.currentUser && location.pathname !== loginPath) {
         history.push(loginPath);
       }
     },
-    bgLayoutImgList: [
-      {
-        src: 'https://mdn.alipayobjects.com/yuyan_qk0oxh/afts/img/D2LWSqNny4sAAAAAAAAAAAAAFl94AQBr',
-        left: 85,
-        bottom: 100,
-        height: '303px',
-      },
-      {
-        src: 'https://mdn.alipayobjects.com/yuyan_qk0oxh/afts/img/C2TWRpJpiC0AAAAAAAAAAAAAFl94AQBr',
-        bottom: -68,
-        right: -45,
-        height: '303px',
-      },
-      {
-        src: 'https://mdn.alipayobjects.com/yuyan_qk0oxh/afts/img/F6vSTbj8KpYAAAAAAAAAAAAAFl94AQBr',
-        bottom: 0,
-        left: 0,
-        width: '331px',
-      },
-    ],
-    links: isDev
-      ? [
-          <Link key="openapi" to="/umi/plugin/openapi" target="_blank">
-            <LinkOutlined />
-            <span>OpenAPI 文档</span>
-          </Link>,
-        ]
-      : [],
-    menuHeaderRender: undefined,
-    // 自定义 403 页面
-    // unAccessible: <div>unAccessible</div>,
-    // 增加一个 loading 的状态
+    menuHeaderRender: () => {
+      return (
+        <div className="header-logo__container">
+          <Typography.Title className="fontTitle" level={5}>
+            SKYT&D
+          </Typography.Title>
+          <Typography.Title className="fontText" level={5}>
+            Nước sạch học đường
+          </Typography.Title>
+        </div>
+      );
+    },
+    headerContentRender: () => {
+      return (
+        <Row className="layout-header__container" gutter={[8, 8]}>
+          <Col className="mt-16">
+            <ListIcon />
+          </Col>
+          <Col>
+            <Typography.Title style={{ marginTop: -4 }} className="fontTitle" level={5}>
+              {initialModelState?.data || '...'}
+            </Typography.Title>
+          </Col>
+        </Row>
+      );
+    },
+
     childrenRender: (children) => {
       // if (initialState?.loading) return <PageLoading />;
       return (
-        <>
-          {children}
-          {isDev && (
-            <SettingDrawer
-              disableUrlParams
-              enableDarkTheme
-              settings={initialState?.settings}
-              onSettingChange={(settings) => {
-                setInitialState((preInitialState) => ({
-                  ...preInitialState,
-                  settings,
-                }));
-              }}
-            />
-          )}
-        </>
+        <Provider store={store}>
+          <ConfigProvider
+            theme={{
+              token: {
+                fontFamily: 'Nunito',
+              },
+            }}
+          >
+            {/* <ProLayout>
+              <PageContainer fixedHeader > */}
+            {children}
+            {/* </PageContainer>
+            </ProLayout> */}
+          </ConfigProvider>
+        </Provider>
       );
     },
     ...initialState?.settings,

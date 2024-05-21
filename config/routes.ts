@@ -23,37 +23,113 @@ export default [
     ],
   },
   {
-    path: '/welcome',
-    name: 'welcome',
-    icon: 'smile',
-    component: './Welcome',
+    path: '/dashboard',
+    name: 'Tổng quan',
+    icon: 'appstore',
+    component: './Dashboard',
   },
+
+  /* Maintain */
   {
-    path: '/admin',
-    name: 'admin',
-    icon: 'crown',
-    access: 'canAdmin',
-    routes: [
-      {
-        path: '/admin',
-        redirect: '/admin/sub-page',
-      },
-      {
-        path: '/admin/sub-page',
-        name: 'sub-page',
-        component: './Admin',
-      },
-    ],
+    path: '/maintenance',
+    name: 'Bảo dưỡng, sửa chữa',
+    icon: 'appstore',
+    component: './Maintenance',
   },
+
+  /* Product */
   {
-    name: 'list.table-list',
-    icon: 'table',
-    path: '/list',
-    component: './TableList',
+    path: '/products',
+    name: 'Sản phẩm',
+    icon: 'appstore',
+    component: './Product',
   },
+
+  {
+    path: '/products/create',
+    name: 'Thêm sản phẩm',
+    component: './Product/AddOrUpdateProduct',
+    hideInMenu: true,
+  },
+
+  {
+    path: '/products/:id',
+    name: 'cập nhật sản phẩm',
+    component: './Product/AddOrUpdateProduct',
+    hideInMenu: true,
+  },
+
+  /* News */
+  {
+    path: '/news',
+    name: 'Tin Tức',
+    icon: 'appstore',
+    component: './News',
+  },
+
+  {
+    path: '/news/create',
+    name: 'Thêm tin tức',
+    component: './News/AddOrUpdateNews',
+    hideInMenu: true,
+  },
+
+  {
+    path: '/news/:id',
+    name: 'cập nhật tin tức',
+    component: './News/AddOrUpdateNews',
+    hideInMenu: true,
+  },
+
+  /* Notification */
+  {
+    path: '/notification',
+    name: 'Quản lý thông báo',
+    icon: 'appstore',
+    component: './Notification',
+  },
+
+  {
+    path: '/notification/create',
+    name: 'Thêm thông báo',
+    component: './Notification/AddOrUpdateNotification',
+    hideInMenu: true,
+  },
+
+  {
+    path: '/notification/:id',
+    name: 'Cập nhật thông báo',
+    component: './Notification/AddOrUpdateNotification',
+    hideInMenu: true,
+  },
+
+  /* Account */
+  {
+    path: '/account',
+    name: 'Quản lý tài khoản',
+    icon: 'appstore',
+    component: './Account',
+  },
+
+  /* School */
+  {
+    path: '/school',
+    name: 'Quản lý trường học',
+    icon: 'appstore',
+    component: './School',
+  },
+
+  {
+    path: '/school/revenue',
+    name: 'Doanh thu trường học',
+    icon: 'appstore',
+    component: './School/Revenue',
+    hideInMenu: true,
+  },
+
   {
     path: '/',
-    redirect: '/welcome',
+    redirect: '/dashboard',
   },
   {
     path: '*',

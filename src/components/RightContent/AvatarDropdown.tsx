@@ -1,12 +1,12 @@
-import { outLogin } from '@/services/ant-design-pro/api';
-import { LogoutOutlined, SettingOutlined, UserOutlined } from '@ant-design/icons';
+import { LogoutOutlined, SettingOutlined, UserOutlined, UserSwitchOutlined } from '@ant-design/icons';
+// import { useEmotionCss } from '@ant-design/use-emotion-css';
 import { history, useModel } from '@umijs/max';
-import { Spin } from 'antd';
-import { createStyles } from 'antd-style';
+// import { Spin } from 'antd';
+import useModal from '@/hooks/useModal';
+import ChangePassword from '@/pages/User/ChangePassword';
 import { stringify } from 'querystring';
 import type { MenuInfo } from 'rc-menu/lib/interface';
 import React, { useCallback } from 'react';
-import { flushSync } from 'react-dom';
 import HeaderDropdown from '../HeaderDropdown';
 
 export type GlobalHeaderRightProps = {
@@ -20,84 +20,104 @@ export const AvatarName = () => {
   return <span className="anticon">{currentUser?.name}</span>;
 };
 
-const useStyles = createStyles(({ token }) => {
-  return {
-    action: {
-      display: 'flex',
-      height: '48px',
-      marginLeft: 'auto',
-      overflow: 'hidden',
-      alignItems: 'center',
-      padding: '0 8px',
-      cursor: 'pointer',
-      borderRadius: token.borderRadius,
-      '&:hover': {
-        backgroundColor: token.colorBgTextHover,
-      },
-    },
-  };
-});
-
 export const AvatarDropdown: React.FC<GlobalHeaderRightProps> = ({ menu, children }) => {
+  const json_user = localStorage.getItem('auth');
+  const auth = json_user ? JSON.parse(json_user) : undefined;
+  const {
+    stateModal: editOrChangePasswordState,
+    toggleModal: toggleEditOrChangePasswordModal,
+    offModal: offEditOrChangePasswordModal,
+  } = useModal();
+
+  const handleToggleModal = () => {
+    console.log('alo lao alo');
+    toggleEditOrChangePasswordModal(true, 'add', auth)();
+  };
   /**
    * 退出登录，并且将当前的 url 保存
    */
   const loginOut = async () => {
-    await outLogin();
-    const { search, pathname } = window.location;
-    const urlParams = new URL(window.location.href).searchParams;
-    /** 此方法会跳转到 redirect 参数所在的位置 */
-    const redirect = urlParams.get('redirect');
-    // Note: There may be security issues, please note
-    if (window.location.pathname !== '/user/login' && !redirect) {
-      history.replace({
-        pathname: '/user/login',
-        search: stringify({
-          redirect: pathname + search,
-        }),
-      });
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('auth');
+    const { search, pathname } = history.location;
+    if (history.location.search) {
+      const urlParams = new URL(history.location.search).searchParams;
+      /** 此方法会跳转到 redirect 参数所在的位置 */
+      const redirect = urlParams.get('redirect');
+
+      if (window.location.pathname !== '/user/login' && !redirect) {
+        history.replace({
+          pathname: '/user/login',
+          search: stringify({
+            redirect: pathname + search,
+          }),
+        });
+      }
+    } else {
+      if (window.location.pathname !== '/user/login') {
+        history.replace({
+          pathname: '/user/login',
+          search: stringify({
+            redirect: pathname + search,
+          }),
+        });
+      }
     }
   };
-  const { styles } = useStyles();
-
+  // const actionClassName = useEmotionCss(({ token }) => {
+  //   return {
+  //     display: 'flex',
+  //     height: '48px',
+  //     marginLeft: 'auto',
+  //     overflow: 'hidden',ư
+  //     alignItems: 'center',
+  //     padding: '0 8px',
+  //     cursor: 'pointer',
+  //     borderRadius: token.borderRadius,
+  //     '&:hover': {
+  //       backgroundColor: token.colorBgTextHover,
+  //     },
+  //   };
+  // });
   const { initialState, setInitialState } = useModel('@@initialState');
+  console.log('initialState', initialState);
 
   const onMenuClick = useCallback(
     (event: MenuInfo) => {
       const { key } = event;
       if (key === 'logout') {
-        flushSync(() => {
-          setInitialState((s) => ({ ...s, currentUser: undefined }));
-        });
+        setInitialState((s) => ({ ...s, currentUser: undefined }));
         loginOut();
         return;
+      } else if (key === 'changePassword') {
+        handleToggleModal();
       }
-      history.push(`/account/${key}`);
+      // history.push(`/account/${key}`);
     },
     [setInitialState],
   );
 
-  const loading = (
-    <span className={styles.action}>
-      <Spin
-        size="small"
-        style={{
-          marginLeft: 8,
-          marginRight: 8,
-        }}
-      />
-    </span>
-  );
+  // const loading = (
+  //   <span className={actionClassName}>
+  //     <Spin
+  //       size="small"
+  //       style={{
+  //         marginLeft: 8,
+  //         marginRight: 8,
+  //       }}
+  //     />
+  //   </span>
+  // );
 
-  if (!initialState) {
-    return loading;
-  }
+  // if (!initialState) {
+  //   return loading;
+  // }
 
-  const { currentUser } = initialState;
+  // const { currentUser } = initialState;
 
-  if (!currentUser || !currentUser.name) {
-    return loading;
-  }
+  // if (!currentUser || !currentUser.name) {
+  //   return loading;
+  // }
 
   const menuItems = [
     ...(menu
@@ -118,21 +138,33 @@ export const AvatarDropdown: React.FC<GlobalHeaderRightProps> = ({ menu, childre
         ]
       : []),
     {
+      key: 'changePassword',
+      icon: <UserSwitchOutlined />,
+      label: 'Thay đổi mật khẩu',
+    },
+    {
       key: 'logout',
       icon: <LogoutOutlined />,
-      label: '退出登录',
+      label: 'Đăng xuất',
     },
   ];
 
   return (
-    <HeaderDropdown
-      menu={{
-        selectedKeys: [],
-        onClick: onMenuClick,
-        items: menuItems,
-      }}
-    >
-      {children}
-    </HeaderDropdown>
+    <div>
+      <HeaderDropdown
+        menu={{
+          selectedKeys: [],
+          onClick: onMenuClick,
+          items: menuItems,
+        }}
+      >
+        {children}
+      </HeaderDropdown>
+      <ChangePassword
+        onCancel={offEditOrChangePasswordModal}
+        isActive={editOrChangePasswordState.open}
+        data={editOrChangePasswordState?.data}
+      />
+    </div>
   );
 };

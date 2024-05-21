@@ -1,0 +1,134 @@
+@import '@/Global.scss';
+
+.container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  height: 100vh;
+  overflow: auto;
+  // background-color: var(--primary-dark);
+  background-image: url('../../../assets/img/background.png');
+}
+
+.content {
+  //   flex: 1;
+  //   margin-top: 120px;
+  //   padding: 32px 0;
+}
+
+.logoContainer {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 40px;
+}
+
+.logo {
+  width: 230px;
+  height: 83px;
+}
+
+.loginContainer {
+  display: flex;
+  justify-content: center;
+}
+
+.loginForm {
+  width: 640px;
+  padding: 40px 120px;
+  background-color: white;
+  border-radius: 16px;
+  box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.1);
+
+  .formTypo {
+    color: var(--text-dark);
+    font-weight: 900;
+    font-size: 30px;
+    font-size: 28px;
+    font-style: normal;
+    line-height: normal;
+    text-align: center;
+    text-transform: uppercase;
+  }
+  .formTitle {
+    margin-bottom: 24px;
+    color: var(--text-regular);
+    font-weight: 600;
+    font-size: 14px;
+    font-family: Nunito;
+    font-style: normal;
+    line-height: normal;
+    text-align: center;
+  }
+  .ant-form-item-label {
+    label {
+      color: var(--text-dark);
+      font-weight: 600;
+      font-size: 14px;
+      font-style: normal;
+      line-height: normal;
+    }
+  }
+
+  .formInput {
+    width: 100%;
+    height: 46px;
+    padding: 12px 8px;
+    color: var(--text-regular);
+    font-weight: 400;
+    font-size: 14px;
+    font-family: Nunito;
+    font-style: normal;
+    line-height: normal;
+    .ant-input {
+      background: #f9f9f9;
+    }
+  }
+
+  .formChecked {
+    display: flex;
+    justify-content: space-between;
+
+    .forgotPassword {
+      color: black;
+      text-decoration: underline;
+    }
+  }
+}
+
+.formBtnLogin {
+  margin-bottom: 0px;
+  text-align: center;
+  .ant-btn-default:hover {
+    color: white !important;
+    border-color: black !important;
+  }
+  .btnLogin {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 20px 16px;
+    color: white;
+    background: var(--primary-dark);
+    border-radius: 4px;
+    outline: none;
+  }
+  .ant-btn-default:hover {
+    color: white;
+    border-color: var(--primary-dark) !important;
+  }
+  .ant-btn-default:not(:disabled):not(.ant-btn-disabled):hover {
+    background: var(--primary-dark);
+  }
+}
+
+@media (min-width: 1024px) {
+  //   .container {
+  //     background-image: url('https://mdn.alipayobjects.com/yuyan_qk0oxh/afts/img/V-_oS6r-i7wAAAAAAAAAAAAAFl94AQBr');
+  //     background-size: cover;
+  //   }
+
+  //   .content {
+  //     padding: 32px 0 24px;
+  //   }
+}
