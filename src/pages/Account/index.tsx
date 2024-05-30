@@ -1,58 +1,157 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { Breadcrumb, Container, InputUI, PencilIcon, PlusIcon, SearchIcon, TrashIcon } from '@/components';
+import {
+  Breadcrumb,
+  Container,
+  InputUI,
+  PencilIcon,
+  PlusIcon,
+  SearchIcon,
+  SelectUI,
+  TooltipCell,
+  TrashIcon,
+} from '@/components';
+import { DEFAULT_PAGE_NUMBER, DEFAULT_SIZE_PAGE, TYPES_ACCOUNT_ALL, defaultTableParams } from '@/constants';
+import useLoading from '@/hooks/useLoading';
 import useModal from '@/hooks/useModal';
+import { IAccount, IGetListParamsUser, IListUser } from '@/models/account.model';
+import { TableParams } from '@/models/common.model';
+import { getListUserAPI } from '@/services/api/account';
+import { getRoleDescription } from '@/utils/common';
 import { useModel } from '@umijs/max';
-import { Button, Col, Form, Row, Table } from 'antd';
-import React, { useEffect } from 'react';
+import { Button, Col, Form, Row, Table, TableColumnsType, Typography, message } from 'antd';
+import React, { useEffect, useState } from 'react';
 import './Account.scss';
 import AddOrUpdateAccount from './AddOrUpdateAccount';
 
 const AccountManagement: React.FC = () => {
   const { setInitialState } = useModel('@@initialState');
   const [form] = Form.useForm();
+  const { isLoading, withLoading } = useLoading();
   const {
     stateModal: editOrAddAccountState,
     toggleModal: toggleEditOrAddAccountModal,
     offModal: offEditOrAddAccountModal,
   } = useModal();
+  const [listUser, setListUser] = useState<IListUser>({} as IListUser);
+  const [tableParams, setTableParams] = useState<TableParams>({
+    pagination: defaultTableParams,
+  });
+
+  const [searchParams, setSearchParams] = useState<IGetListParamsUser>({
+    size: DEFAULT_SIZE_PAGE,
+    page: DEFAULT_PAGE_NUMBER,
+    search: '',
+    role: '',
+  });
+
   const handleToggleModal = () => {
     toggleEditOrAddAccountModal(true, 'add', {})();
   };
 
+  /** handle get list product */
+  const handleGetListUser = async (values: IGetListParamsUser) => {
+    await withLoading(async () => {
+      try {
+        const res = await getListUserAPI(values);
+        setListUser(res);
+        setTableParams({
+          ...tableParams,
+          pagination: {
+            ...tableParams.pagination,
+            current: values.page,
+            total: res.data[1],
+          },
+        });
+      } catch (error: any) {
+        message.error(error?.message);
+      }
+    });
+  };
+
   /** handle submit */
-  const handleSubmit = () => {};
+  const handleSubmitSearchAccount = async (values: any) => {
+    setSearchParams({
+      size: DEFAULT_SIZE_PAGE,
+      page: DEFAULT_PAGE_NUMBER,
+      search: values?.search?.trim() || '',
+      role: values?.role || '',
+    });
+  };
+
+  /** handle Table Change */
+  const handleTableChange = (pagination: any) => {
+    setTableParams({
+      ...tableParams,
+      pagination,
+    });
+    setSearchParams((prevParams) => ({
+      ...prevParams,
+      page: pagination.current,
+      size: pagination.pageSize,
+    }));
+  };
 
   /** config data */
-  const columns = [
+  const columns: TableColumnsType<IAccount> = [
     {
       title: 'STT',
-      dataIndex: 'stt',
       key: 'stt',
       width: '8%',
+      render: (text, row, index) => {
+        return <TooltipCell content={`${(index + 1).toString()}`} />;
+      },
     },
     {
-      title: 'Mã nhân viên',
-      dataIndex: 'code',
+      title: 'Tài khoản',
       key: 'code',
-      width: '20%',
+      width: '15%',
+      render: (text, row) => {
+        return (
+          <TooltipCell
+            title={row?.email ? row?.email : String(row?.phoneNumber)}
+            content={row?.email ? row?.email : String(row?.phoneNumber)}
+          />
+        );
+      },
     },
     {
-      title: 'Tên Nhân Viên',
-      dataIndex: 'name',
+      title: 'Họ và tên',
       key: 'name',
-      width: '40%',
+      width: '15%',
+      render: (text, row) => {
+        return <TooltipCell title={row?.fullName} content={row?.fullName} />;
+      },
     },
+
     {
-      title: 'Ngày/Tháng/Năm',
+      title: 'Trường phụ trách',
       dataIndex: 'date',
       key: 'date',
       width: '20%',
+      render: (text, row) => {
+        return (
+          <Row>
+            {row?.schools?.map((item) => {
+              return (
+                <Col key={item?.id} span={24}>
+                  <Typography.Text key={item?.id} className="text_cell">
+                    {item?.name || ''}
+                  </Typography.Text>
+                </Col>
+              );
+            })}
+          </Row>
+        );
+      },
     },
     {
       title: 'Loại tài khoản',
       dataIndex: 'category',
       key: 'category',
-      width: '20%',
+      width: '10%',
+      render: (text, row) => {
+        return <TooltipCell title={getRoleDescription(row?.role)} content={getRoleDescription(row?.role)} />;
+      },
     },
     {
       title: 'Thao tác',
@@ -75,34 +174,11 @@ const AccountManagement: React.FC = () => {
     },
   ];
 
-  const dataSource = [
-    {
-      key: '1',
-      stt: '1',
-      code: 'NV001',
-      name: 'John Doe',
-      date: '2024-05-09',
-      category: 'Admin',
-    },
-    {
-      key: '2',
-      stt: '2',
-      code: 'NV002',
-      name: 'Jane Smith',
-      date: '2024-05-08',
-      category: 'Manager',
-    },
-    {
-      key: '3',
-      stt: '3',
-      code: 'NV003',
-      name: 'Alice Johnson',
-      date: '2024-05-07',
-      category: 'Employee',
-    },
-  ];
+  /** Use Effect */
+  useEffect(() => {
+    handleGetListUser(searchParams);
+  }, [searchParams]);
 
-  /* Inittial value for root app */
   useEffect(() => {
     setInitialState((s: any) => ({
       ...s,
@@ -114,20 +190,19 @@ const AccountManagement: React.FC = () => {
     <Row className="account-management_container">
       <Breadcrumb title="Quản lý tài khoản" />
       <Container>
-        <Form form={form} layout="vertical" className="account-management_form" onFinish={handleSubmit}>
-          <Row gutter={[16, 12]}>
+        <Form form={form} layout="vertical" className="account-management_form " onFinish={handleSubmitSearchAccount}>
+          <Row gutter={[12, 0]}>
             <Col span={5}>
-              <Form.Item label="Mã nhân viên" name="title" required={false}>
-                <InputUI placeholder="Nhập mã nhân viên" />
+              <Form.Item label="Từ khóa tìm kiếm" name="search" required={false}>
+                <InputUI allowClear placeholder="Nhập email hoặc số điện thoại" />
               </Form.Item>
             </Col>
             <Col span={5}>
-              <Form.Item label="Tên nhân viên" name="date" required={false}>
-                <InputUI placeholder="Nhập tên nhân viên" />
+              <Form.Item label="Loại tài khoản" name="role" required={false}>
+                <SelectUI placeholder="Chọn loại tài khoản" options={TYPES_ACCOUNT_ALL} />
               </Form.Item>
             </Col>
-          </Row>
-          <Row gutter={[10, 10]}>
+            <Col span={14}></Col>
             <Col span={3}>
               <Button icon={<SearchIcon />} className="btn btn-primary" key="submit" htmlType="submit">
                 Tìm kiếm
@@ -143,12 +218,14 @@ const AccountManagement: React.FC = () => {
       </Container>
       <Container className="mt-24">
         <Table
-          dataSource={dataSource}
+          dataSource={listUser?.data?.length > 0 ? (listUser?.data[0] as never) : []}
           columns={columns}
-          pagination={false}
           locale={{ emptyText: 'Chưa có dữ liệu' }}
           scroll={{ y: '60vh' }}
           showSorterTooltip={false}
+          loading={isLoading}
+          pagination={tableParams.pagination}
+          onChange={handleTableChange}
         />
       </Container>
       <AddOrUpdateAccount

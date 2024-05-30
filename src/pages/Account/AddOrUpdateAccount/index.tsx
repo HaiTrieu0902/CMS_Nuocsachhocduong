@@ -1,14 +1,17 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { DatePickerUI, InputUI, SelectUI, SortDescendingIcon, XCircleIcon } from '@/components';
+import { DEFAULT_PAGE_NUMBER, DEFAULT_SIZE_PAGE_MAX } from '@/constants';
 import { ETYPE_ACCOUNT } from '@/constants/enum';
 import useLoading from '@/hooks/useLoading';
 import { IAccount } from '@/models/account.model';
+import { Ischool } from '@/models/school.model';
 import { createAccountAPI } from '@/services/api/account';
+import { getListSchoolAPI } from '@/services/api/school';
 import { checkKeyCode, emailValidationPattern } from '@/utils/common';
 import { Button, Col, DatePickerProps, Divider, Form, Modal, Radio, Row, Typography, message } from 'antd';
 import { RadioChangeEvent } from 'antd/lib';
 import dayjs from 'dayjs';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import './AddOrUpdateAccount.scss';
 
 interface AddOrUpdateAccountProps {
@@ -23,16 +26,21 @@ const AddOrUpdateAccount = ({ isActive, title, data, onCancel }: AddOrUpdateAcco
   const { isLoading, withLoading } = useLoading();
   const [startDate, setStartDate] = useState<dayjs.Dayjs>(dayjs());
   const [value, setValue] = useState(1);
-
+  const [listSchool, setListSchool] = useState<Ischool[]>();
+  const [selectMode, setSelectMode] = useState<'multiple' | undefined>('multiple');
+  console.log('selectMode', selectMode);
   /** handle change date */
   const handleDateChange: DatePickerProps['onChange'] = (date: any, name) => {
     setStartDate(date);
-    console.log('date', date);
   };
 
   const onChange = (e: RadioChangeEvent) => {
-    console.log('radio checked', e.target.value);
     setValue(e.target.value);
+
+    setSelectMode(e.target.value === ETYPE_ACCOUNT.STAFF ? 'multiple' : undefined);
+    if (e.target.value === ETYPE_ACCOUNT.PRINCIPAL) {
+      form.setFieldValue('school', undefined);
+    }
   };
 
   const handleCancelModal = () => {
@@ -43,13 +51,16 @@ const AddOrUpdateAccount = ({ isActive, title, data, onCancel }: AddOrUpdateAcco
   const handleSubmit = async (values: IAccount) => {
     await withLoading(async () => {
       try {
-        const { school, ...rest } = values;
+        const { schoolIds, ...rest } = values;
+        const formattedSchool = Array.isArray(schoolIds) ? schoolIds : [schoolIds];
         const params = {
           ...rest,
+          schoolIds: formattedSchool,
           avatar:
             'https://static0.gamerantimages.com/wordpress/wp-content/uploads/2022/11/gojo-satoru.jpg?q=50&fit=contain&w=1140&h=&dpr=1.5',
         };
-        const res = await createAccountAPI(params);
+
+        await createAccountAPI(params);
         message.success('Tạo tài khoản thành công');
         handleCancelModal();
       } catch (error: any) {
@@ -57,6 +68,21 @@ const AddOrUpdateAccount = ({ isActive, title, data, onCancel }: AddOrUpdateAcco
       }
     });
   };
+
+  /** Use Effect */
+  useEffect(() => {
+    const handleGetListSchool = async () => {
+      try {
+        const res = await getListSchoolAPI({ size: DEFAULT_SIZE_PAGE_MAX, page: DEFAULT_PAGE_NUMBER });
+        setListSchool(res?.data[0]);
+      } catch (error: any) {
+        message.error(error?.message);
+      }
+    };
+    if (isActive) {
+      handleGetListSchool();
+    }
+  }, [isActive]);
 
   return (
     <Modal
@@ -90,7 +116,7 @@ const AddOrUpdateAccount = ({ isActive, title, data, onCancel }: AddOrUpdateAcco
           <Col span={24}>
             <Form.Item
               label="Chọn trường :"
-              name="school"
+              name="schoolIds"
               required={true}
               rules={[
                 {
@@ -99,7 +125,17 @@ const AddOrUpdateAccount = ({ isActive, title, data, onCancel }: AddOrUpdateAcco
                 },
               ]}
             >
-              <SelectUI placeholder="Chọn trường học phụ trách" options={[{ value: 1, label: 'THPT NTN' }]} />
+              <SelectUI
+                maxTagCount={'responsive'}
+                mode={selectMode}
+                placeholder="Chọn trường học phụ trách"
+                options={listSchool?.map((item) => {
+                  return {
+                    value: item?.id,
+                    label: item?.name,
+                  };
+                })}
+              />
             </Form.Item>
           </Col>
           <Col span={24}>

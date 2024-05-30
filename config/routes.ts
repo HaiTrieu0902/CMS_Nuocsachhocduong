@@ -59,6 +59,14 @@ export default [
     hideInMenu: true,
   },
 
+  /* Product */
+  {
+    path: '/category',
+    name: 'Phân loại sản phẩm',
+    icon: 'appstore',
+    component: './Category',
+  },
+
   /* News */
   {
     path: '/news',
@@ -125,6 +133,14 @@ export default [
     icon: 'appstore',
     component: './School/Revenue',
     hideInMenu: true,
+  },
+
+  /* contract */
+  {
+    path: '/contract',
+    name: 'Quản lý hợp đồng',
+    icon: 'appstore',
+    component: './Contract',
   },
 
   {

@@ -1,23 +1,26 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { Breadcrumb, Container, InputUI, PlusIcon } from '@/components';
-import { allowedFormatsImage } from '@/utils/common';
+import { BASE_URL } from '@/constants/urls';
+import useLoading from '@/hooks/useLoading';
+import { INews } from '@/models/news.model';
+import { UploadImagesMultiplieApi } from '@/services/api/common';
+import { createNewsAPI, getDetailNewsAPI, updateNewsAPI } from '@/services/api/new';
+import {
+  allowedFormatsImage,
+  handleBeforeSaveLoadImage,
+  handleImageProcessing,
+  updateEditorContent,
+  uploadPlugin,
+} from '@/utils/common';
 import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
-import { Editor } from '@ckeditor/ckeditor5-core';
 import { CKEditor } from '@ckeditor/ckeditor5-react';
-import { FileLoader, UploadAdapter } from '@ckeditor/ckeditor5-upload';
+import { history, useParams } from '@umijs/max';
 import { Button, Checkbox, Col, Form, Input, Row, Typography, Upload, UploadFile, message } from 'antd';
 import ImgCrop from 'antd-img-crop';
 import { UploadProps } from 'antd/lib';
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import './AddOrUpdateNews.scss';
 const { TextArea } = Input;
-type DataRef = {
-  id?: string;
-  status?: string;
-  thumbnail?: string;
-  fileThumbnail?: UploadFile | any;
-  count?: number;
-};
 
 const customLocale = {
   upload: 'Tải lên',
@@ -27,8 +30,10 @@ const customLocale = {
 
 const AddOrUpdateNews = () => {
   const [form] = Form.useForm();
-  const initialDataRef = useRef<DataRef>({ id: '', status: '', thumbnail: '', count: 0, fileThumbnail: '' });
   const [imageUrl, setImageUrl] = useState<string>();
+  const { isLoading, withLoading } = useLoading();
+  const [fileList, setFileList] = useState<UploadFile>();
+  const { id } = useParams<{ id: string }>();
   const [editorContent, setEditorContent] = useState<string>('');
 
   /* Props upload file list */
@@ -51,57 +56,84 @@ const AddOrUpdateNews = () => {
 
   const handleSubmit = () => {};
 
+  /* handle upload image list in Ckeditor */
+  const handleUploadImageList = async (editorContent: string) => {
+    const listImageCKeditor = await handleBeforeSaveLoadImage(editorContent);
+    const uploadResults = await UploadImagesMultiplieApi(listImageCKeditor);
+    const imageUrls = uploadResults.map((url: string) => `${url}`);
+    return imageUrls;
+  };
+
   /* handle onChange upload file thumbnail */
   const onChangeThumbnail: UploadProps['onChange'] = ({ file: newFileList }) => {
-    initialDataRef.current.fileThumbnail = newFileList;
-  };
-
-  /* handle upload file in Ckeditor */
-  const uploadAdapter = (loader: FileLoader): UploadAdapter => {
-    return {
-      upload: () => {
-        // eslint-disable-next-line no-async-promise-executor
-        return new Promise(async (resolve, reject) => {
-          try {
-            const file = await loader.file;
-            if (file) {
-              if (!allowedFormatsImage.includes(file.type)) {
-                reject('You can only upload PNG, JPEG, or JPG file!');
-                return;
-              }
-              if (file?.size / 1024 / 1024 > 5) {
-                reject('File cannot be larger than 5mb!');
-                return;
-              }
-            }
-            const reader = new FileReader();
-            reader.onload = (event) => {
-              const imageUrl = event.target?.result as string;
-              resolve({ default: imageUrl });
-            };
-            reader.readAsDataURL(file as never);
-          } catch (error) {
-            reject('Reject');
-          }
-        });
-      },
-      abort: () => {},
-    };
-  };
-
-  /* handle upload plugin */
-  const uploadPlugin = (editor: Editor) => {
-    editor.plugins.get('FileRepository').createUploadAdapter = (loader) => {
-      return uploadAdapter(loader);
-    };
+    setFileList(newFileList);
   };
 
   /* handle actions news */
   const handleAddNewsOrUpdate = async () => {
-    await form.validateFields().then(async (formItem) => {
-      console.log('formItem', formItem);
+    await withLoading(async () => {
+      try {
+        await form.validateFields().then(async (formValues: INews) => {
+          const imageUrls = await handleImageProcessing([fileList]);
+
+          /** CK editor content */
+          const uploadedImagesCkeditor = await handleUploadImageList(editorContent);
+          const content = await updateEditorContent(uploadedImagesCkeditor, editorContent, true);
+
+          /** Param API */
+          const params = {
+            ...formValues,
+            content: content,
+            position: formValues.position ? 1 : 0,
+            thumbnail: imageUrls[0],
+          };
+
+          /** Check Id  */
+          if (id) {
+            const res = await updateNewsAPI({ ...params }, id);
+            message.success('Cập nhật sản phẩm thành công');
+            await history.push('/news');
+          } else {
+            const res = await createNewsAPI(params);
+            message.success('Thêm sản phẩm thành công');
+            await history.push('/news');
+          }
+        });
+      } catch (error: any) {
+        message.error(error?.message);
+      }
     });
   };
+
+  /** Use Effect */
+  useEffect(() => {
+    if (id) {
+      const handleGetNewsDetail = async () => {
+        try {
+          const res = await getDetailNewsAPI(id);
+          const setInitialForm: INews = {
+            title: res?.data?.title,
+            summary: res?.data?.summary,
+            position: res?.data?.position,
+            content: '',
+            thumbnail: res?.data?.thumbnail,
+          };
+          form?.setFieldsValue(setInitialForm);
+          setFileList({
+            uid: res?.data?.createdAt,
+            name: res?.data?.thumbnail?.split('/').pop(),
+            status: 'hasExits',
+            url: `${BASE_URL}${res?.data?.thumbnail}`,
+          } as any);
+          setImageUrl(`${BASE_URL}${res?.data?.thumbnail}`);
+          setEditorContent(res?.data?.content);
+        } catch (error: any) {
+          message.error(error?.message);
+        }
+      };
+      handleGetNewsDetail();
+    }
+  }, [id]);
 
   return (
     <Row className="addOrUpdate-management_container">
@@ -109,12 +141,18 @@ const AddOrUpdateNews = () => {
         <Breadcrumb title="Thêm tin mới" />
         <Row>
           <Button onClick={handleAddNewsOrUpdate} icon={<PlusIcon />} className="btn btn-add">
-            Thêm tin mới
+            {id ? 'Cập nhật tin' : 'Thêm tin mới'}
           </Button>
         </Row>
       </div>
       <Container className="mt-16">
-        <Form form={form} layout="vertical" className="addOrUpdate-management_form" onFinish={handleSubmit}>
+        <Form
+          initialValues={{ position: false }}
+          form={form}
+          layout="vertical"
+          className="addOrUpdate-management_form"
+          onFinish={handleSubmit}
+        >
           <Row gutter={[{ xs: 8, sm: 16, md: 36, lg: 120, xxl: 10 }, 16]}>
             <Col xxl={{ span: 5 }} lg={{ span: 5 }} sm={{ span: 8 }}>
               <Form.Item
@@ -172,7 +210,7 @@ const AddOrUpdateNews = () => {
                 </Form.Item>
               </div>
               <div>
-                <Form.Item name="checked" required={false}>
+                <Form.Item name="position" valuePropName="checked" required={false}>
                   <Checkbox>
                     <Typography.Text>Tin tức nổi bật</Typography.Text>
                   </Checkbox>

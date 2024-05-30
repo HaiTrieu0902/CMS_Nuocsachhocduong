@@ -4,7 +4,11 @@ import CaretDown from '@/assets/icons/CaretDown.svg';
 import {
   AccountActiveIcon,
   AccountInactiveIcon,
+  AgreementActiveIcon,
+  AgreementInactiveIcon,
   AvatarDropdown,
+  CategoryActiveIcon,
+  CategoryIactiveIcon,
   DashboardActiveIcon,
   DashboardInactiveIcon,
   HomeActiveIcon,
@@ -66,6 +70,8 @@ const renderSideBarIcon = (path: string, hasSubmenu = false, isCollapse: boolean
       return currentPathName.includes(path) ? <SettingsActiveIcon /> : <SettingsIactiveIcon />;
     case ESidebarPath.PRODUCT:
       return currentPathName.includes(path) ? <ProductActiveIcon /> : <ProductIactiveIcon />;
+    case ESidebarPath.CATEGORY:
+      return currentPathName.includes(path) ? <CategoryActiveIcon /> : <CategoryIactiveIcon />;
     case ESidebarPath.NEW:
       return currentPathName.includes(path) ? <NewsActiveIcon /> : <NewsInactiveIcon />;
     case ESidebarPath.NOTIFICATION:
@@ -74,6 +80,8 @@ const renderSideBarIcon = (path: string, hasSubmenu = false, isCollapse: boolean
       return currentPathName.includes(path) ? <AccountActiveIcon /> : <AccountInactiveIcon />;
     case ESidebarPath.SCHOOL:
       return currentPathName.includes(path) ? <HomeActiveIcon /> : <HomeInactiveIcon />;
+    case ESidebarPath.CONTRACT:
+      return currentPathName.includes(path) ? <AgreementActiveIcon /> : <AgreementInactiveIcon />;
 
     default:
       break;

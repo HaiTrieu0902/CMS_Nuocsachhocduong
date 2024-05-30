@@ -14,7 +14,7 @@ const Login: React.FC = () => {
   const handleSubmit = async (values: IUser) => {
     await withLoading(async () => {
       try {
-        const res = await loginAPI(values);
+        const res = await loginAPI({ ...values, deviceLogin: 'web' });
         if (res) {
           localStorage.setItem('accessToken', res?.data?.token);
           localStorage.setItem('auth', JSON.stringify(res?.data));
@@ -67,7 +67,7 @@ const Login: React.FC = () => {
             </Form.Item>
             <Form.Item className="formBtnLogin">
               <Button loading={isLoading} className="btn btnLogin mt-16" key="submit" htmlType="submit">
-                Đăng nhập
+                Đăng Nhập
               </Button>
             </Form.Item>
           </Form>

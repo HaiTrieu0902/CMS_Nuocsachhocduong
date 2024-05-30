@@ -10,21 +10,18 @@ import {
   TooltipCell,
   TrashIcon,
 } from '@/components';
-import { DEFAULT_PAGE_NUMBER, DEFAULT_SIZE_PAGE } from '@/constants';
+import { defaultTableParams } from '@/constants';
 import useLoading from '@/hooks/useLoading';
 import useModal from '@/hooks/useModal';
 import { IGetQuerySchool, IListSchool, Ischool } from '@/models/school.model';
 import { getListSchoolAPI } from '@/services/api/school';
 import { useAppSelector } from '@/store';
 import { history, useModel } from '@umijs/max';
-import { Button, Col, Form, Row, Table, TableColumnsType, TablePaginationConfig, message } from 'antd';
+import { Button, Col, Form, Row, Table, TableColumnsType, message } from 'antd';
 import React, { useEffect, useState } from 'react';
+import { TableParams } from '../../models/common.model';
 import AddOrUpdateSchool from './AddOrUpdateSchool';
 import './School.scss';
-
-interface TableParams {
-  pagination?: TablePaginationConfig;
-}
 
 const SchoolManagement: React.FC = () => {
   const { setInitialState } = useModel('@@initialState');
@@ -38,12 +35,7 @@ const SchoolManagement: React.FC = () => {
   } = useModal();
   const [listSchool, setListSchool] = useState<IListSchool>({} as IListSchool);
   const [tableParams, setTableParams] = useState<TableParams>({
-    pagination: {
-      current: DEFAULT_PAGE_NUMBER,
-      pageSize: DEFAULT_SIZE_PAGE,
-      showSizeChanger: true,
-      pageSizeOptions: ['10', '20', '30', '40', '50'],
-    },
+    pagination: defaultTableParams,
   });
 
   /** handle toggle modal  */
@@ -170,7 +162,7 @@ const SchoolManagement: React.FC = () => {
         <Form form={form} layout="vertical" className="school-management_form -mb-18" onFinish={handleSubmitSearch}>
           <Row gutter={[16, 12]}>
             <Col span={5}>
-              <Form.Item label="Mã trường học" name="code" required={false}>
+              <Form.Item label="Từ khóa tìm kiếm" name="code" required={false}>
                 <InputUI placeholder="Nhập mã trường học" />
               </Form.Item>
             </Col>

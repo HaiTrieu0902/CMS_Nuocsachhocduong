@@ -53,7 +53,6 @@ const AddOrUpdateSchool = ({ isActive, title, data, onCancel }: AddOrUpdateSchoo
     await withLoading(async () => {
       try {
         const res = await createSchoolAPI(values);
-
         dispatch(triggerLoadingSchool());
         message.success('Tạo trường học thành công');
         handleCancelModal();

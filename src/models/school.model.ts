@@ -13,6 +13,7 @@ export interface IListSchool {
 }
 
 export interface Ischool {
+  id?: string;
   code: string;
   name: string;
   dateContract: string;

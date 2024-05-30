@@ -1,23 +1,29 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { Breadcrumb, Container, InputUI, PlusIcon, PlusX2Icon, SelectUI } from '@/components';
-import { allowedFormatsImage } from '@/utils/common';
+import { DEFAULT_PAGE_NUMBER, DEFAULT_SIZE_PAGE_MAX } from '@/constants';
+import { BASE_URL } from '@/constants/urls';
+import useLoading from '@/hooks/useLoading';
+import { IDataCommon } from '@/models/common.model';
+import { IProduct } from '@/models/product.model';
+import { getListCategoryAPI } from '@/services/api/category';
+import { UploadImagesMultiplieApi } from '@/services/api/common';
+import { createProductAPI, getDetailProductAPI, updateProductAPI } from '@/services/api/product';
+import {
+  allowedFormatsImage,
+  checkKeyCode,
+  handleBeforeSaveLoadImage,
+  handleImageProcessing,
+  onPreviewAllFile,
+  updateEditorContent,
+  uploadPlugin,
+} from '@/utils/common';
 import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
-import { Editor } from '@ckeditor/ckeditor5-core';
 import { CKEditor } from '@ckeditor/ckeditor5-react';
-import { FileLoader, UploadAdapter } from '@ckeditor/ckeditor5-upload';
-import { Button, Col, Form, Input, Row, Upload, UploadFile, message } from 'antd';
-import { RcFile } from 'antd/es/upload';
+import { history, useParams } from '@umijs/max';
+import { Button, Col, Form, Row, Upload, UploadFile, message } from 'antd';
 import { UploadProps } from 'antd/lib';
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import './AddOrUpdateProduct.scss';
-const { TextArea } = Input;
-type DataRef = {
-  id?: string;
-  status?: string;
-  thumbnail?: string;
-  fileThumbnail?: UploadFile | any;
-  count?: number;
-};
 
 type typeUpload = {
   file: any;
@@ -26,82 +32,72 @@ type typeUpload = {
 
 const AddOrUpdateProduct = () => {
   const [form] = Form.useForm();
-  const initialDataRef = useRef<DataRef>({ id: '', status: '', thumbnail: '', count: 0, fileThumbnail: '' });
-  const [imageUrl, setImageUrl] = useState<string>();
+  const { isLoading, withLoading } = useLoading();
+  const { id } = useParams<{ id: string }>();
   const [fileList, setFileList] = useState<UploadFile[]>([]);
   const [listPhoto, setListPhoto] = useState<typeUpload[]>([]);
   const [editorContent, setEditorContent] = useState<string>('');
+  const [listCategory, setListCategory] = useState<IDataCommon[]>();
 
   /* Props upload file list */
   const propsUploadListPhoto: UploadProps = {
     beforeUpload: (file: any) => {
       const isAllowed = allowedFormatsImage.includes(file.type);
       if (!isAllowed) {
-        message.error('You can only upload PNG, JPEG, or JPG file!');
-        setImageUrl(undefined);
+        message.error('Bạn chỉ upload được file PNG, JPEG, or JPG file!');
       } else if (file?.size / 1024 / 1024 > 5) {
-        message.error('File cannot be larger than 5mb!');
-        setImageUrl(undefined);
+        message.error('Ảnh không lớn quá 5mb!');
       } else {
-        setImageUrl(URL.createObjectURL(file));
         form.setFieldsValue({ thumbnail: file?.name });
         return isAllowed;
       }
     },
   };
 
-  const handleSubmit = () => {};
-
   /* handle onChange upload file thumbnail */
-  const onChangeThumbnail: UploadProps['onChange'] = ({ file: newFileList }) => {
-    initialDataRef.current.fileThumbnail = newFileList;
-  };
+  const onChangeThumbnail: UploadProps['onChange'] = ({ file: newFileList }) => {};
 
-  /* handle upload file in Ckeditor */
-  const uploadAdapter = (loader: FileLoader): UploadAdapter => {
-    return {
-      upload: () => {
-        // eslint-disable-next-line no-async-promise-executor
-        return new Promise(async (resolve, reject) => {
-          try {
-            const file = await loader.file;
-            if (file) {
-              if (!allowedFormatsImage.includes(file.type)) {
-                reject('You can only upload PNG, JPEG, or JPG file!');
-                return;
-              }
-              if (file?.size / 1024 / 1024 > 5) {
-                reject('File cannot be larger than 5mb!');
-                return;
-              }
-            }
-            const reader = new FileReader();
-            reader.onload = (event) => {
-              const imageUrl = event.target?.result as string;
-              resolve({ default: imageUrl });
-            };
-            reader.readAsDataURL(file as never);
-          } catch (error) {
-            reject('Reject');
-          }
-        });
-      },
-      abort: () => {},
-    };
-  };
-
-  /* handle upload plugin */
-  const uploadPlugin = (editor: Editor) => {
-    editor.plugins.get('FileRepository').createUploadAdapter = (loader) => {
-      return uploadAdapter(loader);
-    };
+  /* handle upload image list in Ckeditor */
+  const handleUploadImageList = async (editorContent: string) => {
+    const listImageCKeditor = await handleBeforeSaveLoadImage(editorContent);
+    const uploadResults = await UploadImagesMultiplieApi(listImageCKeditor);
+    const imageUrls = uploadResults.map((url: string) => `${BASE_URL}${url}`);
+    return imageUrls;
   };
 
   /* handle actions news */
   const handleAddNewsOrUpdate = async () => {
-    await form.validateFields().then(async (formItem) => {
-      console.log('formItem', formItem);
-      console.log('fileList', fileList);
+    await withLoading(async () => {
+      try {
+        await form.validateFields().then(async (formValues: IProduct) => {
+          const imageUrls = await handleImageProcessing(fileList);
+          /** CK editor content */
+          const uploadedImagesCkeditor = await handleUploadImageList(editorContent);
+          const content = await updateEditorContent(uploadedImagesCkeditor, editorContent, true);
+
+          /** Param API */
+          const params = {
+            ...formValues,
+            cost: Number(formValues.cost),
+            discountPer: Number(formValues.discountPer),
+            images: imageUrls,
+            content: content,
+          };
+
+          /** Check Id  */
+          if (id) {
+            const res = await updateProductAPI({ ...params }, id);
+            message.success('Cập nhật sản phẩm thành công');
+            await history.push('/products');
+          } else {
+            const res = await createProductAPI(params);
+            message.success('Thêm sản phẩm thành công');
+            await history.push('/products');
+          }
+        });
+      } catch (error: any) {
+        message.error(error?.message);
+      }
     });
   };
 
@@ -110,43 +106,65 @@ const AddOrUpdateProduct = () => {
     setFileList(newFileList);
     const result = newFileList.map((item) => ({ file: item, name: item?.name }));
     setListPhoto(result);
-    form.setFieldValue('image', result);
+    form.setFieldValue('images', result);
   };
 
-  /* PreView All File Upload */
-  const onPreviewAllFile = async (file: UploadFile) => {
-    let src = file.url as string;
-    if (!src) {
-      src = await new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(file.originFileObj as RcFile);
-        reader.onload = () => resolve(reader.result as string);
-      });
+  /** Use Effect */
+  useEffect(() => {
+    const handleGetListCategory = async () => {
+      try {
+        const res = await getListCategoryAPI({ size: DEFAULT_SIZE_PAGE_MAX, page: DEFAULT_PAGE_NUMBER });
+        setListCategory(res?.data[0]);
+      } catch (error: any) {
+        message.error(error?.message);
+      }
+    };
+    handleGetListCategory();
+  }, []);
+
+  useEffect(() => {
+    if (id) {
+      const handleGetProductDetail = async () => {
+        try {
+          const res = await getDetailProductAPI(id);
+          const setInitialForm: IProduct = {
+            code: res?.data?.code,
+            name: res?.data?.name,
+            cost: res?.data?.cost,
+            discountPer: res?.data?.discountPer,
+            categoryId: res?.data?.categoryId,
+            content: '',
+            images: res?.data?.images,
+          };
+          form?.setFieldsValue(setInitialForm);
+          const fileListData = res?.data?.images.map((item: any) => ({
+            uid: item.id,
+            name: item.url.split('/').pop(),
+            status: 'hasExits',
+            url: `${BASE_URL}${item.url}`,
+          }));
+          setFileList(fileListData);
+          setEditorContent(res?.data?.content);
+        } catch (error: any) {
+          message.error(error?.message);
+        }
+      };
+      handleGetProductDetail();
     }
-    const image = new Image();
-    image.src = src;
-    const imgWindow = window.open(src);
-    imgWindow?.document.write(image.outerHTML);
-  };
+  }, [id]);
 
   return (
     <Row className="product_action-management_container">
       <div className="product_action-header-management">
-        <Breadcrumb title="Thêm sản phẩm mới" />
+        <Breadcrumb title={id ? 'Cập nhật sản phẩm' : 'Thêm sản phẩm mới'} />
         <Row>
-          <Button onClick={handleAddNewsOrUpdate} icon={<PlusIcon />} className="btn btn-add">
-            Thêm sản phẩm
+          <Button loading={isLoading} onClick={handleAddNewsOrUpdate} icon={<PlusIcon />} className="btn btn-add">
+            {id ? 'Lưu cập nhật' : ' Thêm sản phẩm'}
           </Button>
         </Row>
       </div>
 
-      <Form
-        style={{ width: '100%' }}
-        form={form}
-        layout="vertical"
-        className="product_action-management_form mt-16 "
-        onFinish={handleSubmit}
-      >
+      <Form style={{ width: '100%' }} form={form} layout="vertical" className="product_action-management_form mt-16 ">
         <Container>
           <Row gutter={[16, 0]} justify={'start'}>
             <Col span={6}>
@@ -184,7 +202,7 @@ const AddOrUpdateProduct = () => {
             <Col span={6}>
               <Form.Item
                 label="Giá tiền gốc: "
-                name="code"
+                name="cost"
                 required={true}
                 rules={[
                   {
@@ -193,31 +211,20 @@ const AddOrUpdateProduct = () => {
                   },
                 ]}
               >
-                <InputUI placeholder="Số tiền sản phẩm" />
+                <InputUI onKeyDown={(e: any) => checkKeyCode(e)} placeholder="Số tiền sản phẩm" />
               </Form.Item>
             </Col>
 
             <Col span={6}>
-              <Form.Item
-                className="mb-0"
-                label="% Giảm giá"
-                name="code"
-                required={false}
-                rules={[
-                  {
-                    required: true,
-                    message: 'Giá tiền không được để trống',
-                  },
-                ]}
-              >
-                <InputUI placeholder="" />
+              <Form.Item className="mb-0" label="% Giảm giá" name="discountPer" required={false}>
+                <InputUI defaultValue={0} onKeyDown={(e: any) => checkKeyCode(e)} />
               </Form.Item>
             </Col>
             <Col span={6}>
               <Form.Item
                 className="mb-0"
                 label="Loại sản phẩm: "
-                name="code"
+                name="categoryId"
                 required={true}
                 rules={[
                   {
@@ -226,7 +233,23 @@ const AddOrUpdateProduct = () => {
                   },
                 ]}
               >
-                <SelectUI placeholder="Số tiền sản phẩm" />
+                <SelectUI
+                  showSearch
+                  placeholder="Số tiền sản phẩm"
+                  optionFilterProp="children"
+                  filterOption={(input: any, option: any) =>
+                    (option?.label?.toLowerCase() ?? '').includes(input.toLowerCase())
+                  }
+                  filterSort={(optionA: any, optionB: any) =>
+                    (optionA?.label?.toLowerCase() ?? '').localeCompare(optionB?.label?.toLowerCase())
+                  }
+                  options={listCategory?.map((item) => {
+                    return {
+                      value: item?.id,
+                      label: item.name,
+                    };
+                  })}
+                />
               </Form.Item>
             </Col>
           </Row>
@@ -239,7 +262,7 @@ const AddOrUpdateProduct = () => {
               <Form.Item
                 className="mb-0 title-img-product__upload"
                 label="Hình ảnh sản phẩm:"
-                name="image"
+                name="images"
                 required={true}
                 rules={[
                   {
@@ -259,10 +282,6 @@ const AddOrUpdateProduct = () => {
                   >
                     {fileList?.length < 20 && <PlusX2Icon />}
                   </Upload>
-
-                  {/* {fileList?.length === 0 && isHasImage && (
-                    <Typography.Text className="title-img-product_error">Hình ảnh không được để trống</Typography.Text>
-                  )} */}
                 </Col>
               </Form.Item>
             </Col>
