@@ -5,6 +5,7 @@ import {
   InputUI,
   PencilIcon,
   PlusIcon,
+  PopupConfirm,
   SearchIcon,
   SelectUI,
   TooltipCell,
@@ -15,23 +16,19 @@ import useLoading from '@/hooks/useLoading';
 import useModal from '@/hooks/useModal';
 import { IAccount, IGetListParamsUser, IListUser } from '@/models/account.model';
 import { TableParams } from '@/models/common.model';
-import { getListUserAPI } from '@/services/api/account';
+import { deleteUserAPI, getListUserAPI } from '@/services/api/account';
 import { getRoleDescription } from '@/utils/common';
-import { useModel } from '@umijs/max';
 import { Button, Col, Form, Row, Table, TableColumnsType, Typography, message } from 'antd';
 import React, { useEffect, useState } from 'react';
 import './Account.scss';
 import AddOrUpdateAccount from './AddOrUpdateAccount';
 
 const AccountManagement: React.FC = () => {
-  const { setInitialState } = useModel('@@initialState');
   const [form] = Form.useForm();
   const { isLoading, withLoading } = useLoading();
-  const {
-    stateModal: editOrAddAccountState,
-    toggleModal: toggleEditOrAddAccountModal,
-    offModal: offEditOrAddAccountModal,
-  } = useModal();
+  const { stateModal: editOrAddState, toggleModal: toggleEditOrAddModal, offModal: offEditOrAddModal } = useModal();
+  const { stateModal: confirmState, toggleModal: toggleConfirmModal, offModal: offConfirmModal } = useModal();
+
   const [listUser, setListUser] = useState<IListUser>({} as IListUser);
   const [tableParams, setTableParams] = useState<TableParams>({
     pagination: defaultTableParams,
@@ -45,7 +42,7 @@ const AccountManagement: React.FC = () => {
   });
 
   const handleToggleModal = () => {
-    toggleEditOrAddAccountModal(true, 'add', {})();
+    toggleEditOrAddModal(true, 'add', {})();
   };
 
   /** handle get list product */
@@ -91,12 +88,22 @@ const AccountManagement: React.FC = () => {
     }));
   };
 
+  /** handleOnSubmitDelete */
+  const handleOnSubmitDelete = async (row: IAccount) => {
+    try {
+      if (row?.id) await deleteUserAPI(row?.id);
+      message.success('Xóa người dùng thành công');
+    } catch (error: any) {
+      message.error(error?.message);
+    }
+  };
   /** config data */
   const columns: TableColumnsType<IAccount> = [
     {
       title: 'STT',
       key: 'stt',
       width: '8%',
+      align: 'right',
       render: (text, row, index) => {
         return <TooltipCell content={`${(index + 1).toString()}`} />;
       },
@@ -157,13 +164,14 @@ const AccountManagement: React.FC = () => {
       title: 'Thao tác',
       dataIndex: 'action',
       key: 'action',
+      align: 'center',
       width: '10%',
       render: (text: any, row: any) => (
-        <Row gutter={[8, 10]}>
-          <Col>
+        <Row gutter={[8, 10]} justify={'center'}>
+          <Col className="pointer" onClick={toggleEditOrAddModal(true, 'edit', row)}>
             <PencilIcon />
           </Col>
-          <Col>
+          <Col className="pointer" onClick={toggleConfirmModal(true, 'delete', row)}>
             <TrashIcon />
           </Col>
         </Row>
@@ -178,13 +186,6 @@ const AccountManagement: React.FC = () => {
   useEffect(() => {
     handleGetListUser(searchParams);
   }, [searchParams]);
-
-  useEffect(() => {
-    setInitialState((s: any) => ({
-      ...s,
-      data: 'TÀI KHOẢN',
-    }));
-  });
 
   return (
     <Row className="account-management_container">
@@ -210,7 +211,7 @@ const AccountManagement: React.FC = () => {
             </Col>
             <Col span={4}>
               <Button icon={<PlusIcon />} onClick={handleToggleModal} className="btn btn-add">
-                Thêm nhân viên
+                Thêm tài khoản
               </Button>
             </Col>
           </Row>
@@ -229,9 +230,27 @@ const AccountManagement: React.FC = () => {
         />
       </Container>
       <AddOrUpdateAccount
-        onCancel={offEditOrAddAccountModal}
-        isActive={editOrAddAccountState.open}
-        data={editOrAddAccountState?.data}
+        onCancel={offEditOrAddModal}
+        isActive={editOrAddState.open}
+        data={editOrAddState?.data}
+        onSuccess={() =>
+          handleGetListUser({
+            size: tableParams?.pagination?.pageSize as number,
+            page: tableParams?.pagination?.current as number,
+          })
+        }
+      />
+      <PopupConfirm
+        onCancel={offConfirmModal}
+        isActive={confirmState.open}
+        data={confirmState?.data}
+        onSubmit={handleOnSubmitDelete}
+        onSuccess={() =>
+          handleGetListUser({
+            size: tableParams?.pagination?.pageSize as number,
+            page: tableParams?.pagination?.current as number,
+          })
+        }
       />
     </Row>
   );

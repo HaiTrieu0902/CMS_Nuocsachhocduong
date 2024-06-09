@@ -22,12 +22,6 @@ import React, { useEffect, useState } from 'react';
 import './AddOrUpdateNews.scss';
 const { TextArea } = Input;
 
-const customLocale = {
-  upload: 'Tải lên',
-  remove: 'Hủy bỏ',
-  error: 'Lỗi',
-};
-
 const AddOrUpdateNews = () => {
   const [form] = Form.useForm();
   const [imageUrl, setImageUrl] = useState<string>();
@@ -49,7 +43,7 @@ const AddOrUpdateNews = () => {
       } else {
         setImageUrl(URL.createObjectURL(file));
         form.setFieldsValue({ thumbnail: file?.name });
-        return isAllowed;
+        return false;
       }
     },
   };
@@ -60,7 +54,7 @@ const AddOrUpdateNews = () => {
   const handleUploadImageList = async (editorContent: string) => {
     const listImageCKeditor = await handleBeforeSaveLoadImage(editorContent);
     const uploadResults = await UploadImagesMultiplieApi(listImageCKeditor);
-    const imageUrls = uploadResults.map((url: string) => `${url}`);
+    const imageUrls = uploadResults.map((url: string) => `${BASE_URL}${url}`);
     return imageUrls;
   };
 
@@ -75,7 +69,6 @@ const AddOrUpdateNews = () => {
       try {
         await form.validateFields().then(async (formValues: INews) => {
           const imageUrls = await handleImageProcessing([fileList]);
-
           /** CK editor content */
           const uploadedImagesCkeditor = await handleUploadImageList(editorContent);
           const content = await updateEditorContent(uploadedImagesCkeditor, editorContent, true);
@@ -90,17 +83,18 @@ const AddOrUpdateNews = () => {
 
           /** Check Id  */
           if (id) {
-            const res = await updateNewsAPI({ ...params }, id);
-            message.success('Cập nhật sản phẩm thành công');
-            await history.push('/news');
+            await updateNewsAPI({ ...params }, id);
+            message.success('Cập nhật bài viết thành công');
           } else {
-            const res = await createNewsAPI(params);
-            message.success('Thêm sản phẩm thành công');
-            await history.push('/news');
+            await createNewsAPI(params);
+            message.success('Thêm bài viết thành công');
           }
+          await history.push('/news');
         });
       } catch (error: any) {
-        message.error(error?.message);
+        if (!error?.errorFields) {
+          message.error(error?.message);
+        }
       }
     });
   };

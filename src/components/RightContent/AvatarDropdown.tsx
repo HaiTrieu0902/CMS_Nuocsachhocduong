@@ -30,7 +30,6 @@ export const AvatarDropdown: React.FC<GlobalHeaderRightProps> = ({ menu, childre
   } = useModal();
 
   const handleToggleModal = () => {
-    console.log('alo lao alo');
     toggleEditOrChangePasswordModal(true, 'add', auth)();
   };
   /**

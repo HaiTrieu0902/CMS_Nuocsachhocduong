@@ -1,25 +1,30 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { Breadcrumb, Container, InputUI, PencilIcon, PlusIcon, SearchIcon, TooltipCell, TrashIcon } from '@/components';
+import {
+  Breadcrumb,
+  Container,
+  InputUI,
+  PencilIcon,
+  PlusIcon,
+  PopupConfirm,
+  SearchIcon,
+  TooltipCell,
+  TrashIcon,
+} from '@/components';
 import { DEFAULT_PAGE_NUMBER, DEFAULT_SIZE_PAGE, defaultTableParams } from '@/constants';
 import useLoading from '@/hooks/useLoading';
 import useModal from '@/hooks/useModal';
 import { IDataCommon, IGetListParamCommon, TableParams } from '@/models/common.model';
-import { getListCategoryAPI } from '@/services/api/category';
-import { useModel } from '@umijs/max';
+import { deleteCategoryProductAPI, getListCategoryAPI } from '@/services/api/category';
 import { Button, Col, Form, Row, Table, TableColumnsType, message } from 'antd';
 import React, { useEffect, useState } from 'react';
 import AddOrUpdateCategory from './AddOrUpdateCategory';
 import './Category.scss';
 
 const CategoryManagement: React.FC = () => {
-  const { setInitialState } = useModel('@@initialState');
   const [form] = Form.useForm();
   const { isLoading, withLoading } = useLoading();
-  const {
-    stateModal: editOrAddCategoryState,
-    toggleModal: toggleEditOrAddCategoryModal,
-    offModal: offEditOrAddMaintainModal,
-  } = useModal();
+  const { stateModal: editOrAddState, toggleModal: toggleEditOrAddModal, offModal: offEditOrAddModal } = useModal();
+  const { stateModal: confirmState, toggleModal: toggleConfirmModal, offModal: offConfirmModal } = useModal();
   const [listCategory, setListCategory] = useState<IDataCommon[]>();
   const [tableParams, setTableParams] = useState<TableParams>({
     pagination: defaultTableParams,
@@ -32,7 +37,7 @@ const CategoryManagement: React.FC = () => {
 
   /** handle ToggleModal */
   const handleToggleModal = () => {
-    toggleEditOrAddCategoryModal(true, 'add', {})();
+    toggleEditOrAddModal(true, 'add', {})();
   };
 
   /** handle submit */
@@ -42,6 +47,16 @@ const CategoryManagement: React.FC = () => {
       page: DEFAULT_PAGE_NUMBER,
       search: values?.search?.trim() || '',
     });
+  };
+
+  /** handleOnSubmitDelete */
+  const handleOnSubmitDelete = async (row: any) => {
+    try {
+      if (row?.id) await deleteCategoryProductAPI(row?.id);
+      message.success('Xóa loại sản phẩm thành công');
+    } catch (error: any) {
+      message.error(error?.message);
+    }
   };
 
   /** handle Table Change */
@@ -61,7 +76,7 @@ const CategoryManagement: React.FC = () => {
   const handleGetListCategory = async (values: IGetListParamCommon) => {
     await withLoading(async () => {
       try {
-        const res = await getListCategoryAPI(values);
+        const res = await getListCategoryAPI({ ...values, type: 'product' });
         setListCategory(res?.data[0]);
         setTableParams({
           ...tableParams,
@@ -88,10 +103,10 @@ const CategoryManagement: React.FC = () => {
       },
     },
     {
-      title: 'Mã phân loại sản phẩm',
+      title: 'Mã loại sản phẩm',
       width: '15%',
       render: (text, row) => {
-        return <TooltipCell title={row?.id} content={row?.id} />;
+        return <TooltipCell title={row?.code} content={row?.code} />;
       },
     },
     {
@@ -105,14 +120,15 @@ const CategoryManagement: React.FC = () => {
     {
       title: 'Thao tác',
       dataIndex: 'action',
+      align: 'center',
       key: 'action',
       width: '10%',
       render: (text: any, row: any) => (
-        <Row gutter={[8, 10]}>
-          <Col>
+        <Row gutter={[8, 10]} justify={'center'}>
+          <Col className="pointer" onClick={toggleEditOrAddModal(true, 'edit', row)}>
             <PencilIcon />
           </Col>
-          <Col>
+          <Col className="pointer" onClick={toggleConfirmModal(true, 'delete', row)}>
             <TrashIcon />
           </Col>
         </Row>
@@ -127,13 +143,6 @@ const CategoryManagement: React.FC = () => {
   useEffect(() => {
     handleGetListCategory(searchParams);
   }, [searchParams]);
-
-  useEffect(() => {
-    setInitialState((s: any) => ({
-      ...s,
-      data: 'LOẠI SẢN PHẨM',
-    }));
-  });
 
   return (
     <Row className="category-management_container">
@@ -173,9 +182,21 @@ const CategoryManagement: React.FC = () => {
         />
       </Container>
       <AddOrUpdateCategory
-        onCancel={offEditOrAddMaintainModal}
-        isActive={editOrAddCategoryState.open}
-        data={editOrAddCategoryState?.data}
+        onCancel={offEditOrAddModal}
+        isActive={editOrAddState.open}
+        data={editOrAddState?.data}
+        onSuccess={() =>
+          handleGetListCategory({
+            size: tableParams?.pagination?.pageSize as number,
+            page: tableParams?.pagination?.current as number,
+          })
+        }
+      />
+      <PopupConfirm
+        onCancel={offConfirmModal}
+        isActive={confirmState.open}
+        data={confirmState?.data}
+        onSubmit={handleOnSubmitDelete}
         onSuccess={() =>
           handleGetListCategory({
             size: tableParams?.pagination?.pageSize as number,

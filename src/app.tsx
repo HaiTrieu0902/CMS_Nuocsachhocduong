@@ -24,17 +24,18 @@ import {
   SettingsIactiveIcon,
 } from '@/components';
 import type { RunTimeLayoutConfig } from '@umijs/max';
-import { history, useModel } from '@umijs/max';
+import { history, useLocation, useModel } from '@umijs/max';
 import { Col, ConfigProvider, Layout, Row, Typography } from 'antd';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Provider } from 'react-redux';
+import { PersistGate } from 'redux-persist/integration/react';
 import defaultSettings from '../config/defaultSettings';
 import './Global.scss';
 import { ESidebarPath } from './constants/enum';
 import { errorConfig } from './requestErrorConfig';
-import store from './store';
+import store, { persistor } from './store';
+import { getTextHeaderDescription } from './utils/common';
 const { Header } = Layout;
-
 const loginPath = '/user/login';
 
 /**
@@ -62,7 +63,6 @@ export async function getInitialState(): Promise<{
 
 const renderSideBarIcon = (path: string, hasSubmenu = false, isCollapse: boolean) => {
   const currentPathName = window.location.pathname;
-
   switch (path) {
     case ESidebarPath.DASHBOARD:
       return currentPathName.includes(path) ? <DashboardActiveIcon /> : <DashboardInactiveIcon />;
@@ -90,11 +90,18 @@ const renderSideBarIcon = (path: string, hasSubmenu = false, isCollapse: boolean
 
 // ProLayout 支持的api https://procomponents.ant.design/components/layout
 export const layout: RunTimeLayoutConfig = ({ initialState, setInitialState }) => {
+  const location = useLocation();
+  const [txtHeader, setTxtHeader] = useState<string>();
   const { initialState: initialModelState }: any = useModel('@@initialState');
   const [isCollapse, setIsCollapse] = useState<boolean>();
   const json_user = localStorage.getItem('auth');
   const auth = json_user ? JSON.parse(json_user) : undefined;
   const src = auth?.avatar || 'https://sport-stretching.s3.us-west-2.amazonaws.com/1702005408_4k-image.jpg';
+
+  useEffect(() => {
+    setTxtHeader(getTextHeaderDescription(location?.pathname));
+  }, [location]);
+
   return {
     actionsRender: () => [],
     logo: () => {
@@ -162,7 +169,7 @@ export const layout: RunTimeLayoutConfig = ({ initialState, setInitialState }) =
           </Col>
           <Col>
             <Typography.Title style={{ marginTop: -4 }} className="fontTitle" level={5}>
-              {initialModelState?.data || '...'}
+              {txtHeader !== '' ? txtHeader : initialModelState?.data ? initialModelState?.data : ''}
             </Typography.Title>
           </Col>
         </Row>
@@ -173,19 +180,21 @@ export const layout: RunTimeLayoutConfig = ({ initialState, setInitialState }) =
       // if (initialState?.loading) return <PageLoading />;
       return (
         <Provider store={store}>
-          <ConfigProvider
-            theme={{
-              token: {
-                fontFamily: 'Nunito',
-              },
-            }}
-          >
-            {/* <ProLayout>
+          <PersistGate loading={null} persistor={persistor}>
+            <ConfigProvider
+              theme={{
+                token: {
+                  fontFamily: 'Nunito',
+                },
+              }}
+            >
+              {/* <ProLayout>
               <PageContainer fixedHeader > */}
-            {children}
-            {/* </PageContainer>
+              {children}
+              {/* </PageContainer>
             </ProLayout> */}
-          </ConfigProvider>
+            </ConfigProvider>
+          </PersistGate>
         </Provider>
       );
     },

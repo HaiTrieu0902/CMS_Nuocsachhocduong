@@ -4,6 +4,7 @@ import {
   Container,
   CurrencyDollarIcon,
   InputUI,
+  ListSmallIcon,
   PencilIcon,
   PlusIcon,
   SearchIcon,
@@ -14,18 +15,23 @@ import { defaultTableParams } from '@/constants';
 import useLoading from '@/hooks/useLoading';
 import useModal from '@/hooks/useModal';
 import { IGetQuerySchool, IListSchool, Ischool } from '@/models/school.model';
+import { setNameSchool } from '@/redux/school.slice';
 import { getListSchoolAPI } from '@/services/api/school';
-import { useAppSelector } from '@/store';
-import { history, useModel } from '@umijs/max';
+import { useAppDispatch, useAppSelector } from '@/store';
+import { history } from '@umijs/max';
 import { Button, Col, Form, Row, Table, TableColumnsType, message } from 'antd';
 import React, { useEffect, useState } from 'react';
 import { TableParams } from '../../models/common.model';
 import AddOrUpdateSchool from './AddOrUpdateSchool';
 import './School.scss';
 
+interface FormValues {
+  search: string;
+}
+
 const SchoolManagement: React.FC = () => {
-  const { setInitialState } = useModel('@@initialState');
-  const [form] = Form.useForm();
+  const dispatch = useAppDispatch();
+  const [form] = Form.useForm<FormValues>();
   const { isLoadingListSchool } = useAppSelector((state) => state.school);
   const { isLoading, withLoading } = useLoading();
   const {
@@ -63,13 +69,17 @@ const SchoolManagement: React.FC = () => {
     });
   };
   /** handle submit */
-  const handleSubmitSearch = (values: any) => {
-    console.log('values', values);
+  const handleSubmitSearch = ({ search }: FormValues) => {
+    handleGetListSchool({
+      size: tableParams?.pagination?.pageSize as number,
+      page: tableParams?.pagination?.current as number,
+      search,
+    });
   };
 
   /** handle submit */
-  const handleNavigate = () => {
-    history.push(`/school/revenue`);
+  const handleNavigate = (route: string) => {
+    history.push(`/school/${route}`);
   };
 
   const handleTableChange = (pagination: any) => {
@@ -105,7 +115,7 @@ const SchoolManagement: React.FC = () => {
       key: 'name',
       width: '40%',
       render: (text, row) => {
-        return <TooltipCell title={row?.name} content={row?.name} />;
+        return <TooltipCell className="truncate" title={row?.name} content={row?.name} />;
       },
     },
     {
@@ -121,17 +131,26 @@ const SchoolManagement: React.FC = () => {
       title: 'Thao tác',
       dataIndex: 'action',
       key: 'action',
-      width: '10%',
+      width: '12%',
       render: (text: any, row: any) => (
-        <Row gutter={[8, 10]}>
-          <Col className="pointer">
+        <Row gutter={[8, 10]} justify={'center'}>
+          <Col className="pointer" onClick={() => handleNavigate(`agreements/${row.id}`)}>
             <PencilIcon />
           </Col>
           <Col className="pointer">
             <TrashIcon />
           </Col>
-          <Col className="pointer" onClick={handleNavigate}>
+          <Col
+            className="pointer"
+            onClick={() => {
+              handleNavigate(`revenue/${row?.id}`);
+              dispatch(setNameSchool(row?.name));
+            }}
+          >
             <CurrencyDollarIcon />
+          </Col>
+          <Col className="pointer" onClick={() => handleNavigate('invest')}>
+            <ListSmallIcon />
           </Col>
         </Row>
       ),
@@ -146,15 +165,10 @@ const SchoolManagement: React.FC = () => {
     handleGetListSchool({
       size: tableParams?.pagination?.pageSize as number,
       page: tableParams?.pagination?.current as number,
+      search: form.getFieldValue('name'),
     });
   }, [isLoadingListSchool, tableParams.pagination?.current, tableParams.pagination?.pageSize]);
 
-  useEffect(() => {
-    setInitialState((s: any) => ({
-      ...s,
-      data: 'TRƯỜNG HỌC',
-    }));
-  }, []);
   return (
     <Row className="school-management_container">
       <Breadcrumb title="Quản lý trường học" />
@@ -162,13 +176,8 @@ const SchoolManagement: React.FC = () => {
         <Form form={form} layout="vertical" className="school-management_form -mb-18" onFinish={handleSubmitSearch}>
           <Row gutter={[16, 12]}>
             <Col span={5}>
-              <Form.Item label="Từ khóa tìm kiếm" name="code" required={false}>
-                <InputUI placeholder="Nhập mã trường học" />
-              </Form.Item>
-            </Col>
-            <Col span={5}>
-              <Form.Item label="Tên trường học" name="name" required={false}>
-                <InputUI placeholder="Nhập tên trường học" />
+              <Form.Item label="Nhập mã hoặc tên trường học" name="search" required={false}>
+                <InputUI placeholder="Nhập mã hoặc tên trường học" />
               </Form.Item>
             </Col>
           </Row>

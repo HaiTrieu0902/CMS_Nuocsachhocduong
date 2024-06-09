@@ -1,0 +1,45 @@
+.info-container {
+    background-color: transparent;
+    border: none;
+    margin-bottom: 1rem;
+}
+.info-card {
+    gap: 2rem;
+
+    &-text {
+        flex-direction: column;
+        justify-content: space-between;
+
+        & > article:first-child {
+            font-size: 14px;
+            font-style: normal;
+            font-weight: 600;
+            line-height: normal;
+        }
+
+        & > article:last-child {
+            font-size: 28px;
+            font-style: normal;
+            font-weight: 700;
+            line-height: normal;
+            letter-spacing: 1px;
+        }
+    }
+}
+
+.chart-container {
+    & #chart-wrapper {
+        height: 400px;
+    }
+
+    & .ant-select-selector {
+        background-color: #E9EAF0 !important;
+    }
+
+    & .ant-select-selection-placeholder {
+        color: #191F33 !important;
+    }
+}
+
+
+

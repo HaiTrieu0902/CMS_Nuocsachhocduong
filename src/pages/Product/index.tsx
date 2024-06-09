@@ -5,6 +5,7 @@ import {
   InputUI,
   PencilIcon,
   PlusIcon,
+  PopupConfirm,
   SearchIcon,
   SelectUI,
   TooltipCell,
@@ -12,17 +13,17 @@ import {
 } from '@/components';
 import { DEFAULT_PAGE_NUMBER, DEFAULT_SIZE_PAGE, DEFAULT_SIZE_PAGE_MAX, defaultTableParams } from '@/constants';
 import useLoading from '@/hooks/useLoading';
+import useModal from '@/hooks/useModal';
 import { IDataCommon, TableParams } from '@/models/common.model';
 import { IGetListParamProduct, IListProduct, IProduct } from '@/models/product.model';
 import { getListCategoryAPI } from '@/services/api/category';
-import { getListProductAPI } from '@/services/api/product';
-import { history, useModel } from '@umijs/max';
+import { deleteProductAPI, getListProductAPI } from '@/services/api/product';
+import { history } from '@umijs/max';
 import { Button, Col, Form, Row, Table, TableColumnsType, message } from 'antd';
 import React, { useEffect, useState } from 'react';
 import './Product.scss';
 
 const ProductManagement: React.FC = () => {
-  const { setInitialState } = useModel('@@initialState');
   const [form] = Form.useForm();
   const { isLoading, withLoading } = useLoading();
   const [listCategory, setListCategory] = useState<IDataCommon[]>();
@@ -30,6 +31,7 @@ const ProductManagement: React.FC = () => {
   const [tableParams, setTableParams] = useState<TableParams>({
     pagination: defaultTableParams,
   });
+  const { stateModal: confirmState, toggleModal: toggleConfirmModal, offModal: offConfirmModal } = useModal();
 
   const [searchParams, setSearchParams] = useState<IGetListParamProduct>({
     size: DEFAULT_SIZE_PAGE,
@@ -90,6 +92,16 @@ const ProductManagement: React.FC = () => {
     });
   };
 
+  /** handleOnSubmitDelete */
+  const handleOnSubmitDelete = async (row: IProduct) => {
+    try {
+      if (row?.id) await deleteProductAPI(row?.id);
+      message.success('Xóa sản phẩm thành công');
+    } catch (error: any) {
+      message.error(error?.message);
+    }
+  };
+
   /** onChange  */
   const onChangeValueSearch = (e: any) => {
     // handleGetListProduct({
@@ -105,6 +117,7 @@ const ProductManagement: React.FC = () => {
       title: 'STT',
       key: 'stt',
       width: '8%',
+      align: 'right',
       render: (text, row, index) => {
         return <TooltipCell content={`${(index + 1).toString()}`} />;
       },
@@ -138,7 +151,9 @@ const ProductManagement: React.FC = () => {
       key: 'name',
       width: '15%',
       render: (text, row) => {
-        return <TooltipCell title={row?.cost?.toLocaleString()} content={row?.cost?.toLocaleString() || ''} />;
+        return (
+          <TooltipCell title={Number(row?.cost).toLocaleString()} content={Number(row?.cost).toLocaleString() || ''} />
+        );
       },
     },
 
@@ -156,6 +171,7 @@ const ProductManagement: React.FC = () => {
     {
       title: 'Giá tiền',
       key: 'name',
+
       width: '15%',
       render: (text, row) => {
         return (
@@ -170,13 +186,14 @@ const ProductManagement: React.FC = () => {
     {
       title: 'Thao tác',
       key: 'action',
+      align: 'center',
       width: '10%',
       render: (text: any, row) => (
-        <Row gutter={[8, 10]}>
+        <Row gutter={[8, 10]} justify={'center'}>
           <Col className="pointer" onClick={() => handleNavigator(row?.id || '')}>
             <PencilIcon />
           </Col>
-          <Col className="pointer">
+          <Col className="pointer" onClick={toggleConfirmModal(true, 'delete', row)}>
             <TrashIcon />
           </Col>
         </Row>
@@ -191,7 +208,11 @@ const ProductManagement: React.FC = () => {
   useEffect(() => {
     const handleGetListCategory = async () => {
       try {
-        const res = await getListCategoryAPI({ size: DEFAULT_SIZE_PAGE_MAX, page: DEFAULT_PAGE_NUMBER });
+        const res = await getListCategoryAPI({
+          size: DEFAULT_SIZE_PAGE_MAX,
+          page: DEFAULT_PAGE_NUMBER,
+          type: 'product',
+        });
         setListCategory(res?.data[0]);
       } catch (error: any) {
         message.error(error?.message);
@@ -203,13 +224,6 @@ const ProductManagement: React.FC = () => {
   useEffect(() => {
     handleGetListProduct(searchParams);
   }, [searchParams]);
-
-  useEffect(() => {
-    setInitialState((s: any) => ({
-      ...s,
-      data: 'SẢN PHẨM',
-    }));
-  }, []);
 
   return (
     <Row className="product-management_container">
@@ -273,6 +287,19 @@ const ProductManagement: React.FC = () => {
           showSorterTooltip={false}
         />
       </Container>
+      <PopupConfirm
+        onCancel={offConfirmModal}
+        isActive={confirmState.open}
+        data={confirmState?.data}
+        onSubmit={handleOnSubmitDelete}
+        onSuccess={() =>
+          handleGetListProduct({
+            size: tableParams?.pagination?.pageSize as number,
+            page: tableParams?.pagination?.current as number,
+            search: searchParams?.search,
+          })
+        }
+      />
     </Row>
   );
 };

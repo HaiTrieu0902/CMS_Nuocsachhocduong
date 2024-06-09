@@ -54,7 +54,12 @@ export const resizeImage = (base64Str: string, maxWidth = 200, maxHeight = 200) 
 
 /**  allowedFormatsImage */
 export const allowedFormatsImage = ['image/png', 'image/jpeg', 'image/jpg'];
-
+export const allowedFormatsDocument = [
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'application/pdf',
+  'text/plain',
+];
 /**  sortColumnText */
 export const sortColumnText = (a: string, b: string) => {
   return a.toLowerCase() > b.toLowerCase() ? 1 : b.toLowerCase() > a.toLowerCase() ? -1 : 0;
@@ -76,9 +81,44 @@ export const formatDecimalValue = (value: number) => {
 };
 
 /**  checkKeyCode */
-export const checkKeyCode = (e: any) => {
-  if (!((e.keyCode >= 48 && e.keyCode <= 57) || (e.keyCode >= 96 && e.keyCode <= 105) || e.keyCode === 8)) {
+export const checkKeyCode = (e: KeyboardEvent) => {
+  const isNumberKey = e.key >= '0' && e.key <= '9';
+  const isBackspace = e.key === 'Backspace';
+
+  if (!(isNumberKey || isBackspace)) {
     e.preventDefault();
+  }
+};
+
+const removeLeadingZeros = (value: string) => {
+  return value.replace(/^0+/, '') || '0';
+};
+
+export const checkKeyCodeDiscount = (e: KeyboardEvent) => {
+  const isNumberKey = e.key >= '0' && e.key <= '9';
+  const isBackspace = e.key === 'Backspace';
+  const isDot = e.key === '.';
+  const input = e.target as HTMLInputElement;
+  const currentValue = input.value;
+  if (isDot && currentValue.includes('.')) {
+    e.preventDefault();
+    return;
+  }
+  if (!(isNumberKey || isBackspace || isDot)) {
+    e.preventDefault();
+    return;
+  }
+  const newValue = isBackspace ? currentValue.slice(0, -1) : currentValue + e.key;
+  const cleanedValue = removeLeadingZeros(newValue);
+  const newValueNumber = parseFloat(cleanedValue);
+  if (!isBackspace && (isNaN(newValueNumber) || newValueNumber < 0 || newValueNumber > 100)) {
+    e.preventDefault();
+    return;
+  }
+  if (newValue !== cleanedValue) {
+    setTimeout(() => {
+      input.value = cleanedValue;
+    }, 0);
   }
 };
 
@@ -206,7 +246,7 @@ export const handleImageProcessing = async (fileList: any[]): Promise<string[]> 
   /**  check listitem newer */
   const listImagesNewer = fileList
     ?.filter((item: any) => item?.status !== 'hasExits')
-    ?.map((element: any) => element.originFileObj);
+    ?.map((element: any) => element.originFileObj || element);
   const uploadResults = listImagesNewer?.length > 0 ? await UploadImagesMultiplieApi(listImagesNewer) : [];
   const imageUrls = uploadResults.map((url: string) => `${url}`);
   return [...listImagesOlder, ...imageUrls];
@@ -237,4 +277,41 @@ export const getRoleDescription = (role: string) => {
     default:
       return 'Hiệu trưởng';
   }
+};
+
+interface RouteDescription {
+  pattern: RegExp;
+  description: string;
+}
+
+const headerDescriptions: RouteDescription[] = [
+  { pattern: /^\/dashboard$/, description: 'TRANG CHỦ' },
+  { pattern: /^\/products$/, description: 'SẢN PHẨM' },
+  { pattern: /^\/products\/create$/, description: 'SẢN PHẨM' },
+  { pattern: /^\/products\/[^/]+$/, description: 'SẢN PHẨM' }, // id
+
+  { pattern: /^\/category$/, description: 'LOẠI SẢN PHẨM' },
+
+  { pattern: /^\/news$/, description: 'TIN TỨC' },
+  { pattern: /^\/news\/create$/, description: 'TIN TỨC' },
+  { pattern: /^\/news\/[^/]+$/, description: 'TIN TỨC' }, // id
+
+  { pattern: /^\/notification$/, description: 'THÔNG BÁO' },
+  { pattern: /^\/notification\/create$/, description: 'THÔNG BÁO' },
+  { pattern: /^\/notification\/[^/]+$/, description: 'THÔNG BÁO' }, // id
+
+  { pattern: /^\/account$/, description: 'TÀI KHOẢN' },
+
+  { pattern: /^\/school$/, description: 'TRƯỜNG HỌC' },
+  { pattern: /^\/school\/revenue$/, description: 'TRƯỜNG HỌC' },
+  { pattern: /^\/school\/revenue\/[^/]+$/, description: 'TRƯỜNG HỌC' }, // id
+  { pattern: /^\/school\/invest$/, description: 'TRƯỜNG HỌC' },
+  { pattern: /^\/school\/agreements\/[^/]+$/, description: 'TRƯỜNG HỌC' }, // id
+
+  { pattern: /^\/contract$/, description: 'HỢP ĐỒNG' },
+];
+
+export const getTextHeaderDescription = (pathname: string): string => {
+  const match = headerDescriptions.find((route) => route.pattern.test(pathname));
+  return match ? match.description : '';
 };

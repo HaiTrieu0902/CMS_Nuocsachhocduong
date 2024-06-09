@@ -23,19 +23,15 @@ import { history, useParams } from '@umijs/max';
 import { Button, Col, Form, Row, Upload, UploadFile, message } from 'antd';
 import { UploadProps } from 'antd/lib';
 import React, { useEffect, useState } from 'react';
-import './AddOrUpdateProduct.scss';
 
-type typeUpload = {
-  file: any;
-  name: any;
-};
+import { checkKeyCodeDiscount } from './../../../utils/common';
+import './AddOrUpdateProduct.scss';
 
 const AddOrUpdateProduct = () => {
   const [form] = Form.useForm();
   const { isLoading, withLoading } = useLoading();
   const { id } = useParams<{ id: string }>();
   const [fileList, setFileList] = useState<UploadFile[]>([]);
-  const [listPhoto, setListPhoto] = useState<typeUpload[]>([]);
   const [editorContent, setEditorContent] = useState<string>('');
   const [listCategory, setListCategory] = useState<IDataCommon[]>();
 
@@ -49,13 +45,10 @@ const AddOrUpdateProduct = () => {
         message.error('Ảnh không lớn quá 5mb!');
       } else {
         form.setFieldsValue({ thumbnail: file?.name });
-        return isAllowed;
+        return false;
       }
     },
   };
-
-  /* handle onChange upload file thumbnail */
-  const onChangeThumbnail: UploadProps['onChange'] = ({ file: newFileList }) => {};
 
   /* handle upload image list in Ckeditor */
   const handleUploadImageList = async (editorContent: string) => {
@@ -96,7 +89,9 @@ const AddOrUpdateProduct = () => {
           }
         });
       } catch (error: any) {
-        message.error(error?.message);
+        if (!error?.errorFields) {
+          message.error(error?.message);
+        }
       }
     });
   };
@@ -105,7 +100,6 @@ const AddOrUpdateProduct = () => {
   const onChangeFileList: UploadProps['onChange'] = ({ fileList: newFileList }) => {
     setFileList(newFileList);
     const result = newFileList.map((item) => ({ file: item, name: item?.name }));
-    setListPhoto(result);
     form.setFieldValue('images', result);
   };
 
@@ -113,7 +107,11 @@ const AddOrUpdateProduct = () => {
   useEffect(() => {
     const handleGetListCategory = async () => {
       try {
-        const res = await getListCategoryAPI({ size: DEFAULT_SIZE_PAGE_MAX, page: DEFAULT_PAGE_NUMBER });
+        const res = await getListCategoryAPI({
+          size: DEFAULT_SIZE_PAGE_MAX,
+          page: DEFAULT_PAGE_NUMBER,
+          type: 'product',
+        });
         setListCategory(res?.data[0]);
       } catch (error: any) {
         message.error(error?.message);
@@ -178,6 +176,7 @@ const AddOrUpdateProduct = () => {
                     required: true,
                     message: 'Mã sản phẩm không được để trống',
                   },
+                  { max: 255, message: 'Mã sản phẩm giới hạn 255 ký tự' },
                 ]}
               >
                 <InputUI placeholder="Nhập mã sản phẩm" />
@@ -193,6 +192,7 @@ const AddOrUpdateProduct = () => {
                     required: true,
                     message: 'Tên sản phẩm không được để trống',
                   },
+                  { max: 255, message: 'Tên sản phẩm giới hạn 255 ký tự' },
                 ]}
               >
                 <InputUI placeholder="Nhập tên sản phẩm" />
@@ -217,7 +217,30 @@ const AddOrUpdateProduct = () => {
 
             <Col span={6}>
               <Form.Item className="mb-0" label="% Giảm giá" name="discountPer" required={false}>
-                <InputUI defaultValue={0} onKeyDown={(e: any) => checkKeyCode(e)} />
+                <InputUI defaultValue={0} onKeyDown={(e: any) => checkKeyCodeDiscount(e)} />
+
+                {/* <InputNumber
+                  style={{ width: '100%' }}
+                  className="formInput"
+                  type="number"
+                  parser={(value: any) => {
+                    let val = value.replace(/\$\s?|(,*)/g, '');
+                    if (val) {
+                      const valueString = `${val}`;
+                      if (valueString.indexOf('.') !== -1) {
+                        const parts = valueString.split('.');
+                        val =
+                          parts[1].length > 2
+                            ? parseFloat(`${parts[0]}.${parts[1].slice(0, 2)}`)
+                            : parseFloat(valueString);
+                      }
+                    }
+                    return val;
+                  }}
+                  precision={2}
+                  step={0.01}
+                  max={100}
+                /> */}
               </Form.Item>
             </Col>
             <Col span={6}>
@@ -275,6 +298,7 @@ const AddOrUpdateProduct = () => {
                   <Upload
                     accept="image/png, image/jpeg"
                     listType="picture-card"
+                    multiple={true}
                     fileList={fileList}
                     onChange={onChangeFileList}
                     onPreview={onPreviewAllFile}

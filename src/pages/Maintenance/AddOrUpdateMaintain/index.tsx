@@ -6,7 +6,7 @@ import { BASE_URL } from '@/constants/urls';
 import useLoading from '@/hooks/useLoading';
 import { IAccount } from '@/models/account.model';
 import { Ischool } from '@/models/school.model';
-import { getListUserAPI } from '@/services/api/account';
+import { getListUserBySchoolAPI } from '@/services/api/account';
 import { createMaintenanceAPI, updateMaintenanceAPI } from '@/services/api/maintenance';
 import { getListSchoolAPI } from '@/services/api/school';
 import { allowedFormatsImage, handleImageProcessing, onPreviewAllFile } from '@/utils/common';
@@ -28,13 +28,15 @@ interface AddOrUpdateMaintainProps {
 const AddOrUpdateMaintain = ({ isActive, title, data, onCancel, onSuccess }: AddOrUpdateMaintainProps) => {
   const [form] = Form.useForm();
   const [listSchool, setListSchool] = useState<Ischool[]>();
-  const [listAccount, setListAccount] = useState<IAccount[]>();
+  const [listAccount, setListAccount] = useState<IAccount[]>([]);
   const [fileList, setFileList] = useState<UploadFile[]>([]);
   const { isLoading, withLoading } = useLoading();
+  const [schoolId, setSchoolId] = useState<string>();
 
   const handleCancelModal = () => {
     onCancel(false);
     form.resetFields();
+    setSchoolId(undefined);
   };
 
   /* Props upload file list */
@@ -47,17 +49,29 @@ const AddOrUpdateMaintain = ({ isActive, title, data, onCancel, onSuccess }: Add
         message.error('Ảnh không lớn quá 5mb!');
       } else {
         form.setFieldsValue({ thumbnail: file?.name });
-        return isAllowed;
+        return false;
       }
     },
   };
 
-  console.log('data', data);
+  /** handle call staff by school */
+  const handleGetListStaffBySchool = async (id: string) => {
+    const res = await getListUserBySchoolAPI(id);
+    setListAccount(res?.data || []);
+  };
+
+  /** handle on change school */
+  const handleOnChangeSchool = async (e: string) => {
+    setSchoolId(e);
+    handleGetListStaffBySchool(e);
+    form.setFieldValue('assignedTo', undefined);
+  };
+
+  /** handle submit */
   const handleSubmit = async (values: any) => {
     await withLoading(async () => {
       try {
         const imageUrls = await handleImageProcessing(fileList);
-        console.log('imageUrls', imageUrls);
         if (data?.id) {
           const res = await updateMaintenanceAPI({
             ...values,
@@ -87,9 +101,7 @@ const AddOrUpdateMaintain = ({ isActive, title, data, onCancel, onSuccess }: Add
     const handleGetListSchoolAndUSer = async () => {
       try {
         const res = await getListSchoolAPI({ size: DEFAULT_SIZE_PAGE_MAX, page: DEFAULT_PAGE_NUMBER });
-        const resUser = await getListUserAPI({ size: DEFAULT_SIZE_PAGE_MAX, page: DEFAULT_PAGE_NUMBER, role: 'Staff' });
-        setListSchool(res?.data[0]);
-        setListAccount(resUser?.data[0]);
+        setListSchool(res?.data ? res?.data[0] : []);
       } catch (error: any) {}
     };
     if (isActive) {
@@ -110,6 +122,8 @@ const AddOrUpdateMaintain = ({ isActive, title, data, onCancel, onSuccess }: Add
         reason: data?.reason,
         assignedTo: data?.assignedTo,
       };
+      handleGetListStaffBySchool(data?.schoolId);
+      setSchoolId(data?.schoolId);
       form.setFieldsValue(initialForm);
       const fileListData = data?.images.map((item: any) => ({
         uid: item.id,
@@ -170,6 +184,7 @@ const AddOrUpdateMaintain = ({ isActive, title, data, onCancel, onSuccess }: Add
                     label: item?.name,
                   };
                 })}
+                onChange={(e) => handleOnChangeSchool(e)}
               />
             </Form.Item>
           </Col>
@@ -250,7 +265,11 @@ const AddOrUpdateMaintain = ({ isActive, title, data, onCancel, onSuccess }: Add
               ]}
             >
               <SelectUI
-                disabled={data?.status === EMaintenanceStatus.COMPLETE || data?.status === EMaintenanceStatus.COMPLETED}
+                disabled={
+                  data?.status === EMaintenanceStatus.COMPLETE ||
+                  data?.status === EMaintenanceStatus.COMPLETED ||
+                  !schoolId
+                }
                 showSearch
                 maxTagCount={'responsive'}
                 filterOption={(input: any, option: any) =>
@@ -276,6 +295,7 @@ const AddOrUpdateMaintain = ({ isActive, title, data, onCancel, onSuccess }: Add
               accept="image/png, image/jpeg"
               listType="picture-card"
               fileList={fileList}
+              multiple={true}
               onChange={onChangeFileList}
               onPreview={onPreviewAllFile}
               {...propsUploadListPhoto}

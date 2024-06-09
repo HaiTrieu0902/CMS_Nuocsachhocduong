@@ -7,10 +7,18 @@ interface TooltipCellProps {
   content?: string;
   isDate?: boolean;
   className?: string;
+  formatDate?: string;
 }
 
-const TooltipCell: React.FC<TooltipCellProps> = ({ title, content, isDate, className }) => {
-  const displayContent = isDate && content ? format(new Date(content), 'dd/MM/yyyy') : content || 'N/A';
+const TooltipCell: React.FC<TooltipCellProps> = ({
+  title,
+  content,
+  isDate,
+  className,
+  formatDate,
+}) => {
+  const displayContent =
+    isDate && content ? format(new Date(content), formatDate ?? 'dd/MM/yyyy') : content || 'N/A';
   return (
     <TooltipParagraph placement="topLeft" title={title || displayContent} className={className}>
       {displayContent}

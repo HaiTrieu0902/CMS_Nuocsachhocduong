@@ -8,8 +8,10 @@ export interface IGetListParamCommon {
 }
 
 export interface IDataCommon {
-  id: string;
+  id?: string;
   name: string;
+  code?: string;
+  type?: string;
 }
 
 export interface TableParams {

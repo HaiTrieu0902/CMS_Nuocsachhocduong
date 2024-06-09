@@ -29,7 +29,7 @@ export const TYPES_ACCOUNT_ALL = [
   ...TYPES_ACCOUNT,
 ];
 
-export const STATE_MAINTENNANCE = [
+export const STATE_MAINTENANCE = [
   {
     value: EMaintenanceStatus.PENDING,
     label: 'Chờ xử lý',
@@ -48,12 +48,12 @@ export const STATE_MAINTENNANCE = [
   },
 ];
 
-export const STATE_MAINTENNANCE_ALL = [
+export const STATE_MAINTENANCE_ALL = [
   {
     value: '',
     label: 'Tất cả',
   },
-  ...STATE_MAINTENNANCE,
+  ...STATE_MAINTENANCE,
 ];
 
 export const TYPE_PROBLEM = [

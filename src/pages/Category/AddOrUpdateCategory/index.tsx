@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { InputUI, PlusIcon, XCircleIcon } from '@/components';
-import { addCategoryAPI } from '@/services/api/category';
-import { Button, Col, Divider, Form, Input, Modal, Row, Typography, message } from 'antd';
-import React from 'react';
+import { addCategoryAPI, updateCategoryAPI } from '@/services/api/category';
+import { Button, Col, Divider, Form, Modal, Row, Typography, message } from 'antd';
+import React, { useEffect } from 'react';
 import './AddOrUpdateCategory.scss';
-const { TextArea } = Input;
+
 interface AddOrUpdateCategoryProps {
   isActive: boolean;
   title?: string;
@@ -23,14 +23,31 @@ const AddOrUpdateCategory = ({ isActive, title, data, onCancel, onSuccess }: Add
 
   const handleSubmit = async (values: any) => {
     try {
-      await addCategoryAPI({ name: values?.name });
+      if (data?.id) {
+        await updateCategoryAPI({ ...values, type: 'product', id: data?.id });
+        message.success('Cập nhật loại sản phẩm thành công');
+      } else {
+        await addCategoryAPI({ ...values, type: 'product' });
+        message.success('Thêm loại sản phẩm thành công');
+      }
+
       handleCancelModal();
       onSuccess();
-      message.success('Thêm loại sản phẩm thành công');
     } catch (error: any) {
       message.error(error?.message);
     }
   };
+
+  /** Use Effect */
+  useEffect(() => {
+    if (data?.id && isActive) {
+      const setInitialForm = {
+        code: data?.code,
+        name: data?.name,
+      };
+      form?.setFieldsValue(setInitialForm);
+    }
+  }, [isActive]);
 
   return (
     <Modal
@@ -39,7 +56,11 @@ const AddOrUpdateCategory = ({ isActive, title, data, onCancel, onSuccess }: Add
       destroyOnClose={true}
       closeIcon={<XCircleIcon />}
       centered
-      title={<Typography.Title className="title-header_modal">Thêm loại sản phẩm</Typography.Title>}
+      title={
+        <Typography.Title className="title-header_modal">
+          {data?.id ? 'Cập nhật loại sản phẩm' : 'Thêm loại sản phẩm'}
+        </Typography.Title>
+      }
       open={isActive}
       onCancel={handleCancelModal}
       className="modal-category-management__container"
@@ -51,13 +72,17 @@ const AddOrUpdateCategory = ({ isActive, title, data, onCancel, onSuccess }: Add
           </Col>
           <Col span={24}>
             <Form.Item
-              label="Nhập mã loại sản phẩm :"
+              label="Mã loại sản phẩm: "
               name="code"
-              required={false}
+              required={true}
               rules={[
                 {
-                  required: false,
-                  message: 'Mã sản phẩm không được để trồng',
+                  required: true,
+                  message: 'Mã loại sản phẩm không được để trống',
+                },
+                {
+                  max: 255,
+                  message: 'Mã lại sản phẩm giới hạn 255 ký tự',
                 },
               ]}
             >
@@ -67,13 +92,17 @@ const AddOrUpdateCategory = ({ isActive, title, data, onCancel, onSuccess }: Add
 
           <Col span={24}>
             <Form.Item
-              label="Nhập loại sản phẩm :"
+              label="Loại sản phẩm :"
               name="name"
               required={true}
               rules={[
                 {
                   required: true,
-                  message: 'Loại sản phẩm không được để trồng',
+                  message: 'Tên loại sản phẩm không được để trống',
+                },
+                {
+                  max: 255,
+                  message: 'Tên lại sản phẩm giới hạn 255 ký tự',
                 },
               ]}
             >
@@ -82,7 +111,7 @@ const AddOrUpdateCategory = ({ isActive, title, data, onCancel, onSuccess }: Add
           </Col>
           <Col span={24} className="mt-16">
             <Button icon={<PlusIcon />} htmlType="submit" className="btn btn-add">
-              Thêm loại sản phẩm mới
+              {data?.id ? 'Cập nhật' : 'Thêm loại sản phẩm mới'}
             </Button>
           </Col>
         </Row>

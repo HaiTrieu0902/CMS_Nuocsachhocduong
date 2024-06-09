@@ -39,3 +39,17 @@ export const UploadImagesMultiplieApi = async (files: File[]) => {
     })
     .then((res: AxiosResponse) => res.data);
 };
+
+export const uploadFilesApi = async (files: File[]) => {
+  const formData = new FormData();
+  files.forEach((file) => {
+    formData.append('files', file);
+  });
+  return client
+    .post<string[]>('uploads/upload-files', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    })
+    .then((res) => res.data);
+};

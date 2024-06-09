@@ -4,6 +4,7 @@ import {
   InputUI,
   PencilIcon,
   PlusIcon,
+  PopupConfirm,
   SearchColorBlueIcon,
   SearchIcon,
   SelectUI,
@@ -11,13 +12,13 @@ import {
   TooltipParagraph,
   TrashIcon,
 } from '@/components';
-import { DEFAULT_PAGE_NUMBER, DEFAULT_SIZE_PAGE, STATE_MAINTENNANCE_ALL, defaultTableParams } from '@/constants';
+import { DEFAULT_PAGE_NUMBER, DEFAULT_SIZE_PAGE, STATE_MAINTENANCE_ALL, defaultTableParams } from '@/constants';
 import { EMaintenanceStatus } from '@/constants/enum';
 import useLoading from '@/hooks/useLoading';
 import useModal from '@/hooks/useModal';
 import { TableParams } from '@/models/common.model';
 import { IGetListMaintenance, IListMaintenance, IMaintenance } from '@/models/maintenance.model';
-import { getListMaintenanceAPI } from '@/services/api/maintenance';
+import { deleteMaintenanceAPI, getListMaintenanceAPI } from '@/services/api/maintenance';
 import { getStatusText } from '@/utils/common';
 import { useModel } from '@umijs/max';
 import { Button, Col, Form, Row, Table, TableColumnsType, Typography, message } from 'antd';
@@ -35,6 +36,7 @@ const MaintenanceManagement: React.FC = () => {
     toggleModal: toggleEditOrAddMaintainModal,
     offModal: offEditOrAddMaintainModal,
   } = useModal();
+  const { stateModal: confirmState, toggleModal: toggleConfirmModal, offModal: offConfirmModal } = useModal();
   const [listMaintenance, setListMaintenance] = useState<IListMaintenance>({} as IListMaintenance);
   const [tableParams, setTableParams] = useState<TableParams>({
     pagination: defaultTableParams,
@@ -92,6 +94,16 @@ const MaintenanceManagement: React.FC = () => {
       search: values?.search?.trim() || '',
       status: values?.status || '',
     });
+  };
+
+  /** handleOnSubmitDelete */
+  const handleOnSubmitDelete = async (row: IMaintenance) => {
+    try {
+      if (row?.id) await deleteMaintenanceAPI(row?.id);
+      message.success('Xóa sản phẩm thành công');
+    } catch (error: any) {
+      message.error(error?.message);
+    }
   };
 
   const columns: TableColumnsType<IMaintenance> = [
@@ -183,7 +195,7 @@ const MaintenanceManagement: React.FC = () => {
       key: 'action',
       width: '10%',
       render: (text: any, row: any) => (
-        <Row gutter={[8, 10]}>
+        <Row gutter={[8, 10]} justify={'center'}>
           {row?.status === EMaintenanceStatus.COMPLETE || row?.status === EMaintenanceStatus.COMPLETED ? (
             <Col className="pointer" onClick={toggleEditOrAddMaintainModal(true, 'view', row)}>
               <SearchColorBlueIcon />
@@ -193,7 +205,7 @@ const MaintenanceManagement: React.FC = () => {
               <Col className="pointer" onClick={toggleEditOrAddMaintainModal(true, 'edit', row)}>
                 <PencilIcon />
               </Col>
-              <Col className="pointer">
+              <Col className="pointer" onClick={toggleConfirmModal(true, 'delete', row)}>
                 <TrashIcon />
               </Col>
             </React.Fragment>
@@ -213,9 +225,9 @@ const MaintenanceManagement: React.FC = () => {
   useEffect(() => {
     setInitialState((s: any) => ({
       ...s,
-      data: '30 SỰ CỐ, BẢO DƯỠNG CHƯA ĐƯỢC XỬ LÝ',
+      data: `${listMaintenance?.data ? listMaintenance?.data[1] : ''} SỰ CỐ, BẢO DƯỠNG CHƯA ĐƯỢC XỬ LÝ`,
     }));
-  }, [setInitialState]);
+  }, [listMaintenance?.data]);
 
   return (
     <Row className="maintain-management_container">
@@ -230,7 +242,7 @@ const MaintenanceManagement: React.FC = () => {
             </Col>
             <Col span={5}>
               <Form.Item label="Trạng thái" name="status" required={false}>
-                <SelectUI placeholder="Chọn trạng thái" options={STATE_MAINTENNANCE_ALL} />
+                <SelectUI placeholder="Chọn trạng thái" options={STATE_MAINTENANCE_ALL} />
               </Form.Item>
             </Col>
             <Col span={14}></Col>
@@ -265,6 +277,19 @@ const MaintenanceManagement: React.FC = () => {
         isActive={editOrAddMaintainState.open}
         data={editOrAddMaintainState?.data}
         onSuccess={() => handleGetListMaintenance(searchParams)}
+      />
+
+      <PopupConfirm
+        onCancel={offConfirmModal}
+        isActive={confirmState.open}
+        data={confirmState?.data}
+        onSubmit={handleOnSubmitDelete}
+        onSuccess={() =>
+          handleGetListMaintenance({
+            size: tableParams?.pagination?.pageSize as number,
+            page: tableParams?.pagination?.current as number,
+          })
+        }
       />
     </Row>
   );

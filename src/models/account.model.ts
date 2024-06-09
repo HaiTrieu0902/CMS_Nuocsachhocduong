@@ -2,17 +2,17 @@ import { IGetListParamCommon } from './common.model';
 export interface IAccount {
   id?: string;
   email: string;
-  password: string;
+  password?: string;
   fullName: string;
   phoneNumber: number;
   role: string;
-  avatar: string;
-  dob: string | undefined;
+  avatar?: string;
+  dob: string | Date | any;
   schoolIds?: string | any;
   schools?: any[];
-  isDeleted: boolean;
-  updatedAt: string | Date;
-  resetPasswordCode: string | undefined;
+  isDeleted?: boolean;
+  updatedAt?: string | Date;
+  resetPasswordCode?: string | undefined;
 }
 
 export interface IGetListParamsUser extends IGetListParamCommon {

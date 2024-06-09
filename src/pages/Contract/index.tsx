@@ -15,14 +15,12 @@ import useLoading from '@/hooks/useLoading';
 import useModal from '@/hooks/useModal';
 import { IDataCommon, IGetListParamCommon, TableParams } from '@/models/common.model';
 import { getListCategoryAPI } from '@/services/api/category';
-import { useModel } from '@umijs/max';
 import { Button, Col, Form, Row, Table, TableColumnsType, message } from 'antd';
 import React, { useEffect, useState } from 'react';
 import AddOrUpdateContract from './AddOrUpdateContract';
 import './Contract.scss';
 
 const ContractManagement: React.FC = () => {
-  const { setInitialState } = useModel('@@initialState');
   const [form] = Form.useForm();
   const { isLoading, withLoading } = useLoading();
   const {
@@ -55,7 +53,7 @@ const ContractManagement: React.FC = () => {
   const handleGetListCategory = async (values: IGetListParamCommon) => {
     await withLoading(async () => {
       try {
-        const res = await getListCategoryAPI(values);
+        const res = await getListCategoryAPI({ ...values, type: 'contract' });
         setListCategory(res?.data[0]);
         setTableParams({
           ...tableParams,
@@ -100,7 +98,7 @@ const ContractManagement: React.FC = () => {
       key: 'action',
       width: '10%',
       render: (text: any, row: any) => (
-        <Row gutter={[8, 10]}>
+        <Row gutter={[8, 10]} justify={'center'}>
           <Col>
             <PencilIcon />
           </Col>
@@ -125,13 +123,6 @@ const ContractManagement: React.FC = () => {
       page: tableParams?.pagination?.current as number,
     });
   }, [tableParams.pagination?.current, tableParams.pagination?.pageSize]);
-
-  useEffect(() => {
-    setInitialState((s: any) => ({
-      ...s,
-      data: 'TÊN LOẠI HỢP ĐỒNG',
-    }));
-  });
 
   return (
     <Row className="contract-management_container">

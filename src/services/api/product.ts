@@ -17,3 +17,7 @@ export const createProductAPI = (params: IProduct) => {
 export const updateProductAPI = (params: IProduct, id: string) => {
   return client.post(`product/update-product/${id}`, params).then((res: AxiosResponse) => res.data);
 };
+
+export const deleteProductAPI = (id: string) => {
+  return client.delete(`product/delete/${id}`).then((res: AxiosResponse<any>) => res.data);
+};

@@ -84,7 +84,7 @@ const ChangePassword = ({ isActive, title, data, onCancel }: ChangePasswordProps
               rules={[
                 {
                   required: true,
-                  message: 'Mật khẩu mới không được trống',
+                  message: 'Nhập lại mật khẩu không được trống',
                 },
                 {
                   pattern: /^[^-\s]{6,30}$/,

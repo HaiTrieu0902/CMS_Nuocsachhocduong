@@ -128,10 +128,26 @@ export default [
   },
 
   {
-    path: '/school/revenue',
+    path: '/school/revenue/:id',
     name: 'Doanh thu trường học',
     icon: 'appstore',
     component: './School/Revenue',
+    hideInMenu: true,
+  },
+
+  {
+    path: '/school/invest',
+    name: 'Danh sách thiết bị đầu tư',
+    icon: 'appstore',
+    component: './School/InvestEquipment',
+    hideInMenu: true,
+  },
+
+  {
+    path: '/school/agreements/:id',
+    name: 'Danh sách hợp đồng trường học',
+    icon: 'appstore',
+    component: './School/ListContract',
     hideInMenu: true,
   },
 

@@ -236,6 +236,10 @@ body {
   -webkit-box-orient: vertical;
 }
 
+.disabled {
+  cursor: not-allowed;
+}
+
 ul,
 ol {
   list-style: none;
@@ -441,4 +445,10 @@ html *::-webkit-scrollbar-track {
   .ant-pro-sider-logo {
     display: none;
   }
+}
+
+.ant-select-single {
+  height: 32px;
+  margin-bottom: 8px;
+  font-size: 14px;
 }

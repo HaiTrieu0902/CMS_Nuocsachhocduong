@@ -18,3 +18,7 @@ export const createNewsAPI = (params: INews) => {
 export const updateNewsAPI = (params: INews, id: string) => {
   return client.put(`news/update-news/${id}`, params).then((res: AxiosResponse) => res.data);
 };
+
+export const deleteNewsAPI = (id: string) => {
+  return client.delete(`news/delete/${id}`).then((res: AxiosResponse<any>) => res.data);
+};

@@ -14,3 +14,7 @@ export const updateMaintenanceAPI = (payload: ICreateMaintenance) => {
   const { id, ...rest } = payload;
   return client.put(`maintenance/update/${id}`, rest).then((res: AxiosResponse) => res.data);
 };
+
+export const deleteMaintenanceAPI = (id: string) => {
+  return client.delete(`maintenance/delete/${id}`).then((res: AxiosResponse<any>) => res.data);
+};

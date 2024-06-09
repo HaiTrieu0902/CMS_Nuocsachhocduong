@@ -15,7 +15,6 @@ interface RichTextEditorProps {
 }
 
 const RichTextEditor: React.FC<RichTextEditorProps> = ({ content, onContentChange }) => {
-  console.log('📢 [index.tsx:19]', content);
   const uploadAdapter = (loader: FileLoader): UploadAdapter => {
     return {
       upload: () => {

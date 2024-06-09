@@ -6,16 +6,18 @@ import {
   InputUI,
   PencilIcon,
   PlusIcon,
+  PopupConfirm,
   SearchIcon,
   TooltipCell,
   TrashIcon,
 } from '@/components';
 import { DEFAULT_PAGE_NUMBER, DEFAULT_SIZE_PAGE, defaultTableParams } from '@/constants';
 import useLoading from '@/hooks/useLoading';
+import useModal from '@/hooks/useModal';
 import { IGetListParamCommon, TableParams } from '@/models/common.model';
 import { IListNews, INews } from '@/models/news.model';
-import { getListNewsAPI } from '@/services/api/new';
-import { history, useModel } from '@umijs/max';
+import { deleteNewsAPI, getListNewsAPI } from '@/services/api/new';
+import { history } from '@umijs/max';
 import { Button, Col, Form, Row, Table, TableColumnsType, message } from 'antd';
 import { DatePickerProps } from 'antd/lib';
 import dayjs from 'dayjs';
@@ -23,8 +25,8 @@ import React, { useEffect, useState } from 'react';
 import './News.scss';
 
 const NewsManagement: React.FC = () => {
-  const { setInitialState } = useModel('@@initialState');
   const [form] = Form.useForm();
+  const { stateModal: confirmState, toggleModal: toggleConfirmModal, offModal: offConfirmModal } = useModal();
   const { isLoading, withLoading } = useLoading();
   const currentDate = dayjs();
   const tempStartMonth = dayjs().month(currentDate.month()).date(currentDate.date());
@@ -84,6 +86,16 @@ const NewsManagement: React.FC = () => {
     });
   };
 
+  /** handleOnSubmitDelete */
+  const handleOnSubmitDelete = async (row: INews) => {
+    try {
+      if (row?.id) await deleteNewsAPI(row?.id);
+      message.success('Xóa tin tức thành công');
+    } catch (error: any) {
+      message.error(error?.message);
+    }
+  };
+
   /** config data */
   const columns: TableColumnsType<INews> = [
     {
@@ -132,11 +144,11 @@ const NewsManagement: React.FC = () => {
       key: 'action',
       width: '10%',
       render: (text: any, row: any) => (
-        <Row gutter={[8, 10]}>
+        <Row gutter={[8, 10]} justify={'center'}>
           <Col className="pointer" onClick={() => handleNavigator(row?.id || '')}>
             <PencilIcon></PencilIcon>
           </Col>
-          <Col>
+          <Col className="pointer" onClick={toggleConfirmModal(true, 'delete', row)}>
             <TrashIcon />
           </Col>
         </Row>
@@ -155,14 +167,6 @@ const NewsManagement: React.FC = () => {
       page: tableParams?.pagination?.current as number,
     });
   }, [tableParams.pagination?.current, tableParams.pagination?.pageSize]);
-
-  useEffect(() => {
-    form.setFieldValue('date', startMonth);
-    setInitialState((s: any) => ({
-      ...s,
-      data: 'TIN TỨC',
-    }));
-  }, []);
 
   return (
     <Row className="news-management_container">
@@ -183,6 +187,7 @@ const NewsManagement: React.FC = () => {
                   value={dayjs(startMonth)}
                   format={'MM/YYYY'}
                   onChange={handleDateChange}
+                  placeholder="Chọn tháng / năm"
                 />
               </Form.Item>
             </Col>
@@ -214,6 +219,19 @@ const NewsManagement: React.FC = () => {
           showSorterTooltip={false}
         />
       </Container>
+
+      <PopupConfirm
+        onCancel={offConfirmModal}
+        isActive={confirmState.open}
+        data={confirmState?.data}
+        onSubmit={handleOnSubmitDelete}
+        onSuccess={() =>
+          handleGetListNews({
+            size: tableParams?.pagination?.pageSize as number,
+            page: tableParams?.pagination?.current as number,
+          })
+        }
+      />
     </Row>
   );
 };
