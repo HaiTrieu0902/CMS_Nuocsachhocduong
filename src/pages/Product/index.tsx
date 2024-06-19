@@ -15,7 +15,7 @@ import { DEFAULT_PAGE_NUMBER, DEFAULT_SIZE_PAGE, DEFAULT_SIZE_PAGE_MAX, defaultT
 import useLoading from '@/hooks/useLoading';
 import useModal from '@/hooks/useModal';
 import { IDataCommon, TableParams } from '@/models/common.model';
-import { IGetListParamProduct, IListProduct, IProduct } from '@/models/product.model';
+import { IGetListParamProduct, IProduct } from '@/models/product.model';
 import { getListCategoryAPI } from '@/services/api/category';
 import { deleteProductAPI, getListProductAPI } from '@/services/api/product';
 import { history } from '@umijs/max';
@@ -27,17 +27,17 @@ const ProductManagement: React.FC = () => {
   const [form] = Form.useForm();
   const { isLoading, withLoading } = useLoading();
   const [listCategory, setListCategory] = useState<IDataCommon[]>();
-  const [listProduct, setListProduct] = useState<IListProduct>({} as IListProduct);
+  const [listProduct, setListProduct] = useState<IProduct[]>([]);
   const [tableParams, setTableParams] = useState<TableParams>({
     pagination: defaultTableParams,
   });
   const { stateModal: confirmState, toggleModal: toggleConfirmModal, offModal: offConfirmModal } = useModal();
 
   const [searchParams, setSearchParams] = useState<IGetListParamProduct>({
-    size: DEFAULT_SIZE_PAGE,
+    pageSize: DEFAULT_SIZE_PAGE,
     page: DEFAULT_PAGE_NUMBER,
     search: '',
-    categoryId: '',
+    categoryProductId: '',
   });
 
   /** handle navigator */
@@ -54,7 +54,7 @@ const ProductManagement: React.FC = () => {
     await withLoading(async () => {
       try {
         const res = await getListProductAPI(values);
-        setListProduct(res);
+        setListProduct(res?.data);
         setTableParams({
           ...tableParams,
           pagination: {
@@ -85,10 +85,10 @@ const ProductManagement: React.FC = () => {
   /** handle submit */
   const handleSubmitSearchProduct = async (values: any) => {
     setSearchParams({
-      size: DEFAULT_SIZE_PAGE,
+      pageSize: DEFAULT_SIZE_PAGE,
       page: DEFAULT_PAGE_NUMBER,
       search: values?.search?.trim() || '',
-      categoryId: values?.categoryId || '',
+      categoryProductId: values?.categoryId || '',
     });
   };
 
@@ -143,7 +143,7 @@ const ProductManagement: React.FC = () => {
       key: 'name',
       width: '15%',
       render: (text, row) => {
-        return <TooltipCell title={row?.category?.name} content={row?.category?.name || ''} />;
+        return <TooltipCell title={row?.categoryProduct?.name} content={row?.categoryProduct?.name || ''} />;
       },
     },
     {
@@ -152,7 +152,10 @@ const ProductManagement: React.FC = () => {
       width: '15%',
       render: (text, row) => {
         return (
-          <TooltipCell title={Number(row?.cost).toLocaleString()} content={Number(row?.cost).toLocaleString() || ''} />
+          <TooltipCell
+            title={Number(row?.price).toLocaleString()}
+            content={Number(row?.price).toLocaleString() || ''}
+          />
         );
       },
     },
@@ -162,22 +165,19 @@ const ProductManagement: React.FC = () => {
       key: 'name',
       width: '15%',
       render: (text, row) => {
-        return (
-          <TooltipCell title={row?.discountPer?.toLocaleString()} content={row?.discountPer?.toLocaleString() || ''} />
-        );
+        return <TooltipCell title={row?.discount?.toLocaleString()} content={row?.discount?.toLocaleString() || ''} />;
       },
     },
 
     {
-      title: 'Giá tiền',
+      title: 'Giá tiền(VNĐ)',
       key: 'name',
-
       width: '15%',
       render: (text, row) => {
         return (
           <TooltipCell
-            title={Number(row?.cost - (row?.cost * row?.discountPer) / 100).toLocaleString()}
-            content={Number(row?.cost - (row?.cost * row?.discountPer) / 100).toLocaleString()}
+            title={Number(row?.price - (row?.price * row?.discount) / 100).toLocaleString()}
+            content={`${Number(row?.price - (row?.price * row?.discount) / 100).toLocaleString()} `}
           />
         );
       },
@@ -209,11 +209,10 @@ const ProductManagement: React.FC = () => {
     const handleGetListCategory = async () => {
       try {
         const res = await getListCategoryAPI({
-          size: DEFAULT_SIZE_PAGE_MAX,
+          pageSize: DEFAULT_SIZE_PAGE_MAX,
           page: DEFAULT_PAGE_NUMBER,
-          type: 'product',
         });
-        setListCategory(res?.data[0]);
+        setListCategory(res?.data);
       } catch (error: any) {
         message.error(error?.message);
       }
@@ -276,7 +275,7 @@ const ProductManagement: React.FC = () => {
 
       <Container className="mt-24">
         <Table
-          dataSource={listProduct?.data?.length > 0 ? (listProduct?.data[0] as never) : []}
+          dataSource={listProduct.length > 0 ? (listProduct as never) : []}
           columns={columns}
           rowKey={(record: any) => record?.id}
           locale={{ emptyText: 'Chưa có dữ liệu' }}
@@ -294,7 +293,7 @@ const ProductManagement: React.FC = () => {
         onSubmit={handleOnSubmitDelete}
         onSuccess={() =>
           handleGetListProduct({
-            size: tableParams?.pagination?.pageSize as number,
+            pageSize: tableParams?.pagination?.pageSize as number,
             page: tableParams?.pagination?.current as number,
             search: searchParams?.search,
           })

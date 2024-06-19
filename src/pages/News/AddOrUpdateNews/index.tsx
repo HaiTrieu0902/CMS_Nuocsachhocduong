@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { Breadcrumb, Container, InputUI, PlusIcon } from '@/components';
+import { authUser } from '@/constants';
 import { BASE_URL } from '@/constants/urls';
 import useLoading from '@/hooks/useLoading';
 import { INews } from '@/models/news.model';
@@ -9,7 +10,9 @@ import {
   allowedFormatsImage,
   handleBeforeSaveLoadImage,
   handleImageProcessing,
+  removeImageUrls,
   updateEditorContent,
+  updateImageUrls,
   uploadPlugin,
 } from '@/utils/common';
 import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
@@ -54,7 +57,7 @@ const AddOrUpdateNews = () => {
   const handleUploadImageList = async (editorContent: string) => {
     const listImageCKeditor = await handleBeforeSaveLoadImage(editorContent);
     const uploadResults = await UploadImagesMultiplieApi(listImageCKeditor);
-    const imageUrls = uploadResults.map((url: string) => `${BASE_URL}${url}`);
+    const imageUrls = uploadResults?.data?.map((item: any) => `common/images/${item?.filename}`);
     return imageUrls;
   };
 
@@ -76,14 +79,15 @@ const AddOrUpdateNews = () => {
           /** Param API */
           const params = {
             ...formValues,
-            content: content,
-            position: formValues.position ? 1 : 0,
+            content: removeImageUrls(content),
+            type: formValues.type ? true : false,
             thumbnail: imageUrls[0],
+            accountId: authUser?.id || '68821b5d-176c-4e2d-a0ca-2cd7d0641d47',
           };
 
           /** Check Id  */
           if (id) {
-            await updateNewsAPI({ ...params }, id);
+            await updateNewsAPI({ ...params, id: id });
             message.success('Cập nhật bài viết thành công');
           } else {
             await createNewsAPI(params);
@@ -108,19 +112,20 @@ const AddOrUpdateNews = () => {
           const setInitialForm: INews = {
             title: res?.data?.title,
             summary: res?.data?.summary,
-            position: res?.data?.position,
+            type: res?.data?.type,
             content: '',
             thumbnail: res?.data?.thumbnail,
           };
           form?.setFieldsValue(setInitialForm);
+
           setFileList({
             uid: res?.data?.createdAt,
             name: res?.data?.thumbnail?.split('/').pop(),
             status: 'hasExits',
-            url: `${BASE_URL}${res?.data?.thumbnail}`,
+            url: `${BASE_URL}/${res?.data?.thumbnail}`,
           } as any);
-          setImageUrl(`${BASE_URL}${res?.data?.thumbnail}`);
-          setEditorContent(res?.data?.content);
+          setImageUrl(`${BASE_URL}/${res?.data?.thumbnail}`);
+          setEditorContent(updateImageUrls(res?.data?.content));
         } catch (error: any) {
           message.error(error?.message);
         }
@@ -134,14 +139,14 @@ const AddOrUpdateNews = () => {
       <div className="addOrUpdate-header-management">
         <Breadcrumb title="Thêm tin mới" />
         <Row>
-          <Button onClick={handleAddNewsOrUpdate} icon={<PlusIcon />} className="btn btn-add">
+          <Button onClick={handleAddNewsOrUpdate} loading={isLoading} icon={<PlusIcon />} className="btn btn-add">
             {id ? 'Cập nhật tin' : 'Thêm tin mới'}
           </Button>
         </Row>
       </div>
       <Container className="mt-16">
         <Form
-          initialValues={{ position: false }}
+          initialValues={{ type: false }}
           form={form}
           layout="vertical"
           className="addOrUpdate-management_form"
@@ -204,7 +209,7 @@ const AddOrUpdateNews = () => {
                 </Form.Item>
               </div>
               <div>
-                <Form.Item name="position" valuePropName="checked" required={false}>
+                <Form.Item name="type" valuePropName="checked" required={false}>
                   <Checkbox>
                     <Typography.Text>Tin tức nổi bật</Typography.Text>
                   </Checkbox>

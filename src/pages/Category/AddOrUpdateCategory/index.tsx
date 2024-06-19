@@ -24,17 +24,17 @@ const AddOrUpdateCategory = ({ isActive, title, data, onCancel, onSuccess }: Add
   const handleSubmit = async (values: any) => {
     try {
       if (data?.id) {
-        await updateCategoryAPI({ ...values, type: 'product', id: data?.id });
+        await updateCategoryAPI({ ...values, id: data?.id });
         message.success('Cập nhật loại sản phẩm thành công');
       } else {
-        await addCategoryAPI({ ...values, type: 'product' });
+        await addCategoryAPI({ ...values });
         message.success('Thêm loại sản phẩm thành công');
       }
 
       handleCancelModal();
       onSuccess();
     } catch (error: any) {
-      message.error(error?.message);
+      message.error(error?.errors?.errors[0]?.message || error?.message);
     }
   };
 

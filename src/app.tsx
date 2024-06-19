@@ -113,17 +113,21 @@ export const layout: RunTimeLayoutConfig = ({ initialState, setInitialState }) =
       render: (_, avatarChildren) => {
         return (
           <Provider store={store}>
-            <AvatarDropdown>
-              <div className="header-avatar__container">
-                {avatarChildren}
-                <div className="header-avatar__container">
-                  <Typography.Title className="formTypo" level={5}>
-                    {auth?.fullName || 'Admin'}
-                  </Typography.Title>
-                  <img src={CaretDown} alt={'CaretDown'} />
-                </div>
-              </div>
-            </AvatarDropdown>
+            <PersistGate loading={null} persistor={persistor}>
+              <Provider store={store}>
+                <AvatarDropdown>
+                  <div className="header-avatar__container">
+                    {avatarChildren}
+                    <div className="header-avatar__container">
+                      <Typography.Title className="formTypo" level={5}>
+                        {auth?.fullName || 'Admin'}
+                      </Typography.Title>
+                      <img src={CaretDown} alt={'CaretDown'} />
+                    </div>
+                  </div>
+                </AvatarDropdown>
+              </Provider>
+            </PersistGate>
           </Provider>
         );
       },

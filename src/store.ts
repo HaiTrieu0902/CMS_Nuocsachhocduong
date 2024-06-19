@@ -2,6 +2,7 @@ import { combineReducers, configureStore } from '@reduxjs/toolkit';
 import { TypedUseSelectorHook, useDispatch, useSelector } from 'react-redux';
 import { persistReducer, persistStore } from 'redux-persist';
 import storage from 'redux-persist/lib/storage';
+import authSlice from './redux/auth.slice';
 import schoolSlice from './redux/school.slice';
 
 const persistConfig = {
@@ -12,6 +13,7 @@ const persistConfig = {
 
 const reducers = combineReducers({
   school: schoolSlice,
+  auth: authSlice,
 });
 
 const persistedReducer = persistReducer(persistConfig, reducers);

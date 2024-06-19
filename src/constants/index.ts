@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { TablePaginationConfig } from 'antd';
 import { EMaintenanceStatus } from './enum';
 
@@ -73,3 +74,6 @@ export const defaultTableParams: TablePaginationConfig = {
   showSizeChanger: true,
   pageSizeOptions: ['10', '20', '30', '40', '50'],
 };
+
+const json_user = localStorage.getItem('auth');
+export const authUser = json_user ? JSON.parse(json_user) : undefined;

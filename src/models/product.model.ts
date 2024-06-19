@@ -4,23 +4,24 @@ export interface IProduct {
   id?: string;
   code: string;
   name: string;
-  cost: number;
-  discountPer: number;
+  price: number;
+  discount: number;
+  isDelete: boolean;
   content: string;
-  categoryId: string;
   images: any[];
-  category?: {
-    createdAt: string;
-    updatedAt: string;
+  categoryProduct?: {
+    code: string;
     id: string;
     name: string;
   };
+  createAt?: string | any;
+  updatedAt?: string | any;
 }
 
 export interface IGetListParamProduct extends IGetListParamCommon {
   max?: string;
   min?: string;
-  categoryId?: string;
+  categoryProductId?: string;
 }
 
 export interface IListProduct {

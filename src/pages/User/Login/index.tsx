@@ -10,7 +10,6 @@ import './Login.scss';
 const Login: React.FC = () => {
   const { setInitialState } = useModel('@@initialState');
   const { isLoading, withLoading } = useLoading();
-
   const handleSubmit = async (values: IUser) => {
     await withLoading(async () => {
       try {

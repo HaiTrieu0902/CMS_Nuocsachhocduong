@@ -32,7 +32,7 @@ export const UploadImagesMultiplieApi = async (files: File[]) => {
     formData.append('images', file);
   });
   return client
-    .post('uploads/upload-images', formData, {
+    .post('common/upload-images', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },

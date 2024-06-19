@@ -14,7 +14,9 @@ import {
   handleBeforeSaveLoadImage,
   handleImageProcessing,
   onPreviewAllFile,
+  removeImageUrls,
   updateEditorContent,
+  updateImageUrls,
   uploadPlugin,
 } from '@/utils/common';
 import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
@@ -54,12 +56,12 @@ const AddOrUpdateProduct = () => {
   const handleUploadImageList = async (editorContent: string) => {
     const listImageCKeditor = await handleBeforeSaveLoadImage(editorContent);
     const uploadResults = await UploadImagesMultiplieApi(listImageCKeditor);
-    const imageUrls = uploadResults.map((url: string) => `${BASE_URL}${url}`);
+    const imageUrls = uploadResults?.data?.map((item: any) => `common/images/${item?.filename}`);
     return imageUrls;
   };
 
   /* handle actions news */
-  const handleAddNewsOrUpdate = async () => {
+  const handleAddProductOrUpdate = async () => {
     await withLoading(async () => {
       try {
         await form.validateFields().then(async (formValues: IProduct) => {
@@ -71,22 +73,21 @@ const AddOrUpdateProduct = () => {
           /** Param API */
           const params = {
             ...formValues,
-            cost: Number(formValues.cost),
-            discountPer: Number(formValues.discountPer),
+            price: Number(formValues.price),
+            discount: Number(formValues.discount) || 0,
             images: imageUrls,
-            content: content,
+            content: removeImageUrls(content),
           };
 
           /** Check Id  */
           if (id) {
-            const res = await updateProductAPI({ ...params }, id);
+            await updateProductAPI({ ...params, id: id });
             message.success('Cập nhật sản phẩm thành công');
-            await history.push('/products');
           } else {
-            const res = await createProductAPI(params);
+            await createProductAPI(params);
             message.success('Thêm sản phẩm thành công');
-            await history.push('/products');
           }
+          await history.push('/products');
         });
       } catch (error: any) {
         if (!error?.errorFields) {
@@ -108,11 +109,10 @@ const AddOrUpdateProduct = () => {
     const handleGetListCategory = async () => {
       try {
         const res = await getListCategoryAPI({
-          size: DEFAULT_SIZE_PAGE_MAX,
+          pageSize: DEFAULT_SIZE_PAGE_MAX,
           page: DEFAULT_PAGE_NUMBER,
-          type: 'product',
         });
-        setListCategory(res?.data[0]);
+        setListCategory(res?.data);
       } catch (error: any) {
         message.error(error?.message);
       }
@@ -125,24 +125,24 @@ const AddOrUpdateProduct = () => {
       const handleGetProductDetail = async () => {
         try {
           const res = await getDetailProductAPI(id);
-          const setInitialForm: IProduct = {
+          const setInitialForm = {
             code: res?.data?.code,
             name: res?.data?.name,
-            cost: res?.data?.cost,
-            discountPer: res?.data?.discountPer,
-            categoryId: res?.data?.categoryId,
+            price: res?.data?.price,
+            discount: res?.data?.discount,
+            categoryProductId: res?.data?.categoryProduct?.id,
             content: '',
             images: res?.data?.images,
           };
           form?.setFieldsValue(setInitialForm);
           const fileListData = res?.data?.images.map((item: any) => ({
-            uid: item.id,
-            name: item.url.split('/').pop(),
+            uid: item,
+            name: item.split('/').pop(),
             status: 'hasExits',
-            url: `${BASE_URL}${item.url}`,
+            url: `${BASE_URL}/${item}`,
           }));
           setFileList(fileListData);
-          setEditorContent(res?.data?.content);
+          setEditorContent(updateImageUrls(res?.data?.content));
         } catch (error: any) {
           message.error(error?.message);
         }
@@ -156,7 +156,7 @@ const AddOrUpdateProduct = () => {
       <div className="product_action-header-management">
         <Breadcrumb title={id ? 'Cập nhật sản phẩm' : 'Thêm sản phẩm mới'} />
         <Row>
-          <Button loading={isLoading} onClick={handleAddNewsOrUpdate} icon={<PlusIcon />} className="btn btn-add">
+          <Button loading={isLoading} onClick={handleAddProductOrUpdate} icon={<PlusIcon />} className="btn btn-add">
             {id ? 'Lưu cập nhật' : ' Thêm sản phẩm'}
           </Button>
         </Row>
@@ -202,7 +202,7 @@ const AddOrUpdateProduct = () => {
             <Col span={6}>
               <Form.Item
                 label="Giá tiền gốc: "
-                name="cost"
+                name="price"
                 required={true}
                 rules={[
                   {
@@ -216,38 +216,15 @@ const AddOrUpdateProduct = () => {
             </Col>
 
             <Col span={6}>
-              <Form.Item className="mb-0" label="% Giảm giá" name="discountPer" required={false}>
+              <Form.Item className="mb-0" label="% Giảm giá" name="discount" required={false}>
                 <InputUI defaultValue={0} onKeyDown={(e: any) => checkKeyCodeDiscount(e)} />
-
-                {/* <InputNumber
-                  style={{ width: '100%' }}
-                  className="formInput"
-                  type="number"
-                  parser={(value: any) => {
-                    let val = value.replace(/\$\s?|(,*)/g, '');
-                    if (val) {
-                      const valueString = `${val}`;
-                      if (valueString.indexOf('.') !== -1) {
-                        const parts = valueString.split('.');
-                        val =
-                          parts[1].length > 2
-                            ? parseFloat(`${parts[0]}.${parts[1].slice(0, 2)}`)
-                            : parseFloat(valueString);
-                      }
-                    }
-                    return val;
-                  }}
-                  precision={2}
-                  step={0.01}
-                  max={100}
-                /> */}
               </Form.Item>
             </Col>
             <Col span={6}>
               <Form.Item
                 className="mb-0"
                 label="Loại sản phẩm: "
-                name="categoryId"
+                name="categoryProductId"
                 required={true}
                 rules={[
                   {
@@ -281,7 +258,6 @@ const AddOrUpdateProduct = () => {
         <Container className="mt-24">
           <Row className="session-body-image_container">
             <Col span={24}>
-              {/* <Typography.Text className="title-img-product__upload">Hình ảnh sản phẩm: *</Typography.Text> */}
               <Form.Item
                 className="mb-0 title-img-product__upload"
                 label="Hình ảnh sản phẩm:"

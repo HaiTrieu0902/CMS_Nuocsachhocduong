@@ -30,7 +30,7 @@ const CategoryManagement: React.FC = () => {
     pagination: defaultTableParams,
   });
   const [searchParams, setSearchParams] = useState<IGetListParamCommon>({
-    size: DEFAULT_SIZE_PAGE,
+    pageSize: DEFAULT_SIZE_PAGE,
     page: DEFAULT_PAGE_NUMBER,
     search: '',
   });
@@ -43,7 +43,7 @@ const CategoryManagement: React.FC = () => {
   /** handle submit */
   const handleSubmit = async (values: any) => {
     setSearchParams({
-      size: DEFAULT_SIZE_PAGE,
+      pageSize: DEFAULT_SIZE_PAGE,
       page: DEFAULT_PAGE_NUMBER,
       search: values?.search?.trim() || '',
     });
@@ -76,8 +76,8 @@ const CategoryManagement: React.FC = () => {
   const handleGetListCategory = async (values: IGetListParamCommon) => {
     await withLoading(async () => {
       try {
-        const res = await getListCategoryAPI({ ...values, type: 'product' });
-        setListCategory(res?.data[0]);
+        const res = await getListCategoryAPI(values);
+        setListCategory(res?.data);
         setTableParams({
           ...tableParams,
           pagination: {
@@ -187,7 +187,7 @@ const CategoryManagement: React.FC = () => {
         data={editOrAddState?.data}
         onSuccess={() =>
           handleGetListCategory({
-            size: tableParams?.pagination?.pageSize as number,
+            pageSize: tableParams?.pagination?.pageSize as number,
             page: tableParams?.pagination?.current as number,
           })
         }
@@ -199,7 +199,7 @@ const CategoryManagement: React.FC = () => {
         onSubmit={handleOnSubmitDelete}
         onSuccess={() =>
           handleGetListCategory({
-            size: tableParams?.pagination?.pageSize as number,
+            pageSize: tableParams?.pagination?.pageSize as number,
             page: tableParams?.pagination?.current as number,
           })
         }

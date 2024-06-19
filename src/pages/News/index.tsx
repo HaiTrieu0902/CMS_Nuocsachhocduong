@@ -15,7 +15,7 @@ import { DEFAULT_PAGE_NUMBER, DEFAULT_SIZE_PAGE, defaultTableParams } from '@/co
 import useLoading from '@/hooks/useLoading';
 import useModal from '@/hooks/useModal';
 import { IGetListParamCommon, TableParams } from '@/models/common.model';
-import { IListNews, INews } from '@/models/news.model';
+import { INews } from '@/models/news.model';
 import { deleteNewsAPI, getListNewsAPI } from '@/services/api/new';
 import { history } from '@umijs/max';
 import { Button, Col, Form, Row, Table, TableColumnsType, message } from 'antd';
@@ -31,9 +31,15 @@ const NewsManagement: React.FC = () => {
   const currentDate = dayjs();
   const tempStartMonth = dayjs().month(currentDate.month()).date(currentDate.date());
   const [startMonth, setStartMonth] = useState<dayjs.Dayjs>(tempStartMonth);
-  const [listNews, setListNews] = useState<IListNews>({} as IListNews);
+  const [listNews, setListNews] = useState<INews[]>([]);
   const [tableParams, setTableParams] = useState<TableParams>({
     pagination: defaultTableParams,
+  });
+
+  const [searchParams, setSearchParams] = useState<IGetListParamCommon>({
+    pageSize: DEFAULT_SIZE_PAGE,
+    page: DEFAULT_PAGE_NUMBER,
+    search: '',
   });
 
   /** handle navigator */
@@ -47,7 +53,6 @@ const NewsManagement: React.FC = () => {
   /** handle change date */
   const handleDateChange: DatePickerProps['onChange'] = (date: any, name) => {
     setStartMonth(date);
-    console.log('date', date);
   };
 
   /** handle Table Change */
@@ -56,6 +61,11 @@ const NewsManagement: React.FC = () => {
       ...tableParams,
       pagination,
     });
+    setSearchParams((prevParams) => ({
+      ...prevParams,
+      page: pagination.current,
+      pageSize: pagination.pageSize,
+    }));
   };
 
   /** handle get list news */
@@ -63,12 +73,13 @@ const NewsManagement: React.FC = () => {
     await withLoading(async () => {
       try {
         const res = await getListNewsAPI(values);
-        setListNews(res);
+        setListNews(res?.data);
         setTableParams({
           ...tableParams,
           pagination: {
             ...tableParams.pagination,
-            total: res.data[1],
+            current: values.page,
+            total: res.total,
           },
         });
       } catch (error: any) {
@@ -79,11 +90,11 @@ const NewsManagement: React.FC = () => {
 
   /** handle submit */
   const handleSubmitSearchNews = async (values: any) => {
-    handleGetListNews({
-      size: DEFAULT_SIZE_PAGE,
+    setSearchParams((prevParams) => ({
+      ...prevParams,
       page: DEFAULT_PAGE_NUMBER,
       search: values?.search || '',
-    });
+    }));
   };
 
   /** handleOnSubmitDelete */
@@ -132,8 +143,8 @@ const NewsManagement: React.FC = () => {
       render: (text, row) => {
         return (
           <TooltipCell
-            title={`${row?.position === 1 ? 'Tin tức nổi bật ' : 'Tin tức thường ngày'}`}
-            content={`${row?.position === 1 ? 'Tin tức nổi bật ' : 'Tin tức thường ngày'}`}
+            title={`${row?.type === true ? 'Tin tức nổi bật ' : 'Tin tức thường ngày'}`}
+            content={`${row?.type === true ? 'Tin tức nổi bật ' : 'Tin tức thường ngày'}`}
           />
         );
       },
@@ -162,11 +173,8 @@ const NewsManagement: React.FC = () => {
   /** Use Effect */
 
   useEffect(() => {
-    handleGetListNews({
-      size: tableParams?.pagination?.pageSize as number,
-      page: tableParams?.pagination?.current as number,
-    });
-  }, [tableParams.pagination?.current, tableParams.pagination?.pageSize]);
+    handleGetListNews(searchParams);
+  }, [searchParams]);
 
   return (
     <Row className="news-management_container">
@@ -208,7 +216,7 @@ const NewsManagement: React.FC = () => {
       </Container>
       <Container className="mt-24">
         <Table
-          dataSource={listNews?.data?.length > 0 ? (listNews?.data[0] as never) : []}
+          dataSource={listNews?.length > 0 ? (listNews as never) : []}
           rowKey={(record: any) => record?.id}
           columns={columns}
           loading={isLoading}
@@ -227,7 +235,7 @@ const NewsManagement: React.FC = () => {
         onSubmit={handleOnSubmitDelete}
         onSuccess={() =>
           handleGetListNews({
-            size: tableParams?.pagination?.pageSize as number,
+            pageSize: tableParams?.pagination?.pageSize as number,
             page: tableParams?.pagination?.current as number,
           })
         }

@@ -241,15 +241,32 @@ export const uploadPlugin = (editor: Editor) => {
 export const handleImageProcessing = async (fileList: any[]): Promise<string[]> => {
   const listImagesOlder = fileList
     ?.filter((item: any) => item?.status === 'hasExits')
-    ?.map((item) => item?.url.replace(`${BASE_URL}`, ''));
+    ?.map((item) => item?.url.replace(`${BASE_URL}/`, ''));
 
   /**  check listitem newer */
-  const listImagesNewer = fileList
+  const listImagesNewer = await fileList
     ?.filter((item: any) => item?.status !== 'hasExits')
     ?.map((element: any) => element.originFileObj || element);
+
   const uploadResults = listImagesNewer?.length > 0 ? await UploadImagesMultiplieApi(listImagesNewer) : [];
-  const imageUrls = uploadResults.map((url: string) => `${url}`);
+
+  const imageUrls =
+    listImagesNewer?.length > 0 ? uploadResults?.data?.map((item: any) => `common/images/${item?.filename}`) : [];
   return [...listImagesOlder, ...imageUrls];
+};
+
+/* handle update content ckeditor*/
+export const updateImageUrls = (content: string) => {
+  return content.replace(/<img [^>]*src="([^"]+)"[^>]*>/g, (match, p1) => {
+    const newUrl = `${BASE_URL}/${p1}`;
+    return match.replace(p1, newUrl);
+  });
+};
+
+/* handle update content ckeditor*/
+export const removeImageUrls = (content: string) => {
+  const regex = new RegExp(`${BASE_URL}/`, 'g');
+  return content.replace(regex, '');
 };
 
 /* handle getStatusText*/
