@@ -19,5 +19,5 @@ export const updateProductAPI = (params: IProduct) => {
 };
 
 export const deleteProductAPI = (id: string) => {
-  return client.delete(`product/delete/${id}`).then((res: AxiosResponse<any>) => res.data);
+  return client.delete(`product/delete-product/${id}`).then((res: AxiosResponse<any>) => res.data);
 };

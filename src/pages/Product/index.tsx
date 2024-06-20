@@ -53,14 +53,14 @@ const ProductManagement: React.FC = () => {
   const handleGetListProduct = async (values: IGetListParamProduct) => {
     await withLoading(async () => {
       try {
-        const res = await getListProductAPI(values);
+        const res = await getListProductAPI({ ...values, isDelete: false });
         setListProduct(res?.data);
         setTableParams({
           ...tableParams,
           pagination: {
             ...tableParams.pagination,
             current: values.page,
-            total: res.data[1],
+            total: res.total,
           },
         });
       } catch (error: any) {

@@ -22,6 +22,7 @@ export interface IGetListParamProduct extends IGetListParamCommon {
   max?: string;
   min?: string;
   categoryProductId?: string;
+  isDelete?: boolean;
 }
 
 export interface IListProduct {
