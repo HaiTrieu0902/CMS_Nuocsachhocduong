@@ -10,4 +10,23 @@
       }
     }
   }
+  .text_date {
+    color: var(--text-primary2, #767e94);
+    font-weight: 400;
+    font-size: 13px;
+    font-style: normal;
+    line-height: normal;
+  }
+  .text_danger {
+    color: var(--error-regular);
+  }
+  .text_inprogress {
+    color: var(--infomation-regular);
+  }
+  .text_complete {
+    color: var(--primary-dark);
+  }
+  .text_pending {
+    color: var(--warning-regular);
+  }
 }

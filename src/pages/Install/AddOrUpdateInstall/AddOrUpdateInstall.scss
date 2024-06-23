@@ -12,4 +12,9 @@
   .ant-upload-wrapper .ant-upload-select {
     width: 100%;
   }
+  .text_danger {
+    color: var(--error-regular);
+    font-weight: 700;
+    font-size: 15px;
+  }
 }
