@@ -80,7 +80,7 @@ const renderSideBarIcon = (path: string, hasSubmenu = false, isCollapse: boolean
       return currentPathName.includes(path) ? <AccountActiveIcon /> : <AccountInactiveIcon />;
     case ESidebarPath.SCHOOL:
       return currentPathName.includes(path) ? <HomeActiveIcon /> : <HomeInactiveIcon />;
-    case ESidebarPath.CONTRACT:
+    case ESidebarPath.INSTALL:
       return currentPathName.includes(path) ? <AgreementActiveIcon /> : <AgreementInactiveIcon />;
 
     default:

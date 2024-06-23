@@ -7,13 +7,13 @@ export enum ESidebarPath {
   NOTIFICATION = '/notification',
   ACCOUNT = '/account',
   SCHOOL = '/school',
-  CONTRACT = '/contract',
+  INSTALL = '/install',
 }
 
 export enum ETYPE_ACCOUNT {
-  ADMIN = 'Admin',
-  PRINCIPAL = 'Principal',
-  STAFF = 'Staff',
+  ADMIN = 'ADMIN',
+  PRINCIPAL = 'PRINCIPAL',
+  STAFF = 'STAFF',
 }
 
 export enum EMaintenanceStatus {
@@ -28,4 +28,10 @@ export enum EMaintenanceConvert {
   INPROGRESS = 'Đang xử lý',
   COMPLETE = 'Hoàn thành',
   COMPLETED = 'Đã hoàn thành',
+}
+
+export enum EROLE_CONVERT {
+  ADMIN = 'c1b2a78f-7652-4a63-83a6-e7be987900e6',
+  PRINCIPAL = '5554872b-ee57-497a-b9fc-d2c3cd08bcb7',
+  STAFF = '1aaa4422-d200-4fd8-b259-78875e823d06',
 }

@@ -14,7 +14,7 @@ import {
 import { DEFAULT_PAGE_NUMBER, DEFAULT_SIZE_PAGE, TYPES_ACCOUNT_ALL, defaultTableParams } from '@/constants';
 import useLoading from '@/hooks/useLoading';
 import useModal from '@/hooks/useModal';
-import { IAccount, IGetListParamsUser, IListUser } from '@/models/account.model';
+import { IAccount, IGetListParamsUser } from '@/models/account.model';
 import { TableParams } from '@/models/common.model';
 import { deleteUserAPI, getListUserAPI } from '@/services/api/account';
 import { getRoleDescription } from '@/utils/common';
@@ -29,17 +29,18 @@ const AccountManagement: React.FC = () => {
   const { stateModal: editOrAddState, toggleModal: toggleEditOrAddModal, offModal: offEditOrAddModal } = useModal();
   const { stateModal: confirmState, toggleModal: toggleConfirmModal, offModal: offConfirmModal } = useModal();
 
-  const [listUser, setListUser] = useState<IListUser>({} as IListUser);
+  const [listUser, setListUser] = useState<IAccount[]>([]);
   const [tableParams, setTableParams] = useState<TableParams>({
     pagination: defaultTableParams,
   });
 
   const [searchParams, setSearchParams] = useState<IGetListParamsUser>({
-    size: DEFAULT_SIZE_PAGE,
+    pageSize: DEFAULT_SIZE_PAGE,
     page: DEFAULT_PAGE_NUMBER,
     search: '',
-    role: '',
+    roleId: '',
   });
+  console.log('📢 [index.tsx:43]', listUser);
 
   const handleToggleModal = () => {
     toggleEditOrAddModal(true, 'add', {})();
@@ -50,13 +51,13 @@ const AccountManagement: React.FC = () => {
     await withLoading(async () => {
       try {
         const res = await getListUserAPI(values);
-        setListUser(res);
+        setListUser(res?.data);
         setTableParams({
           ...tableParams,
           pagination: {
             ...tableParams.pagination,
             current: values.page,
-            total: res.data[1],
+            total: res.total,
           },
         });
       } catch (error: any) {
@@ -67,12 +68,12 @@ const AccountManagement: React.FC = () => {
 
   /** handle submit */
   const handleSubmitSearchAccount = async (values: any) => {
-    setSearchParams({
-      size: DEFAULT_SIZE_PAGE,
+    setSearchParams((prevParams) => ({
+      ...prevParams,
       page: DEFAULT_PAGE_NUMBER,
       search: values?.search?.trim() || '',
-      role: values?.role || '',
-    });
+      roleId: values?.role || '',
+    }));
   };
 
   /** handle Table Change */
@@ -140,7 +141,7 @@ const AccountManagement: React.FC = () => {
           <Row>
             {row?.schools?.map((item) => {
               return (
-                <Col key={item?.id} span={24}>
+                <Col key={item.id} span={24}>
                   <Typography.Text key={item?.id} className="text_cell">
                     {item?.name || ''}
                   </Typography.Text>
@@ -157,7 +158,12 @@ const AccountManagement: React.FC = () => {
       key: 'category',
       width: '10%',
       render: (text, row) => {
-        return <TooltipCell title={getRoleDescription(row?.role)} content={getRoleDescription(row?.role)} />;
+        return (
+          <TooltipCell
+            title={getRoleDescription(row?.role as string)}
+            content={getRoleDescription(row?.role as string)}
+          />
+        );
       },
     },
     {
@@ -219,7 +225,7 @@ const AccountManagement: React.FC = () => {
       </Container>
       <Container className="mt-24">
         <Table
-          dataSource={listUser?.data?.length > 0 ? (listUser?.data[0] as never) : []}
+          dataSource={listUser?.length > 0 ? (listUser as never) : []}
           columns={columns}
           locale={{ emptyText: 'Chưa có dữ liệu' }}
           scroll={{ y: '60vh' }}
@@ -235,7 +241,7 @@ const AccountManagement: React.FC = () => {
         data={editOrAddState?.data}
         onSuccess={() =>
           handleGetListUser({
-            size: tableParams?.pagination?.pageSize as number,
+            pageSize: tableParams?.pagination?.pageSize as number,
             page: tableParams?.pagination?.current as number,
           })
         }
@@ -247,7 +253,7 @@ const AccountManagement: React.FC = () => {
         onSubmit={handleOnSubmitDelete}
         onSuccess={() =>
           handleGetListUser({
-            size: tableParams?.pagination?.pageSize as number,
+            pageSize: tableParams?.pagination?.pageSize as number,
             page: tableParams?.pagination?.current as number,
           })
         }

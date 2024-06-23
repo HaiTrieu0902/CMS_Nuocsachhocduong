@@ -1,25 +1,23 @@
-export interface IGetQuerySchool {
-  size: number;
-  page: number;
-  search?: string | undefined;
-  filter?: string | undefined;
-  sort?: string | undefined;
+import { IGetListParamCommon } from './common.model';
+
+export interface IGetQuerySchool extends IGetListParamCommon {
+  accountId?: string;
 }
 
-export interface IListSchool {
-  status: number;
-  message: string;
-  data: Array<Ischool[] | any[]>;
-}
-
-export interface Ischool {
+export interface ISchool {
   id?: string;
-  code: string;
   name: string;
-  dateContract: string;
-  description: string;
-  contract?: string;
-  address?: string;
+  address: string;
+  email: string;
+  phoneNumber: string;
+  isDelete: boolean;
+  createdAt?: Date | any;
+  updatedAt?: Date | any;
+  user?: {
+    id: string;
+    fullName: string;
+    email: string;
+  };
 }
 
 /**REVENUE */

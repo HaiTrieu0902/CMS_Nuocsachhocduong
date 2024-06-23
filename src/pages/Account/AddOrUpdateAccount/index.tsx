@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { DatePickerUI, InputUI, SelectUI, SortDescendingIcon, XCircleIcon } from '@/components';
 import { DEFAULT_PAGE_NUMBER, DEFAULT_SIZE_PAGE_MAX } from '@/constants';
-import { ETYPE_ACCOUNT } from '@/constants/enum';
+import { EROLE_CONVERT } from '@/constants/enum';
 import useLoading from '@/hooks/useLoading';
 import { IAccount } from '@/models/account.model';
-import { Ischool } from '@/models/school.model';
+import { ISchool } from '@/models/school.model';
 import { createAccountAPI, getDetailUserAPI, updateAccountAPI } from '@/services/api/account';
 import { getListSchoolAPI } from '@/services/api/school';
 import { checkKeyCode, emailValidationPattern } from '@/utils/common';
@@ -24,11 +24,10 @@ interface AddOrUpdateAccountProps {
 
 const AddOrUpdateAccount = ({ isActive, title, data, onCancel, onSuccess }: AddOrUpdateAccountProps) => {
   const [form] = Form.useForm();
-
   const { isLoading, withLoading } = useLoading();
   const [startDate, setStartDate] = useState<dayjs.Dayjs>(dayjs());
   const [value, setValue] = useState(1);
-  const [listSchool, setListSchool] = useState<Ischool[]>();
+  const [listSchool, setListSchool] = useState<ISchool[]>([]);
   const [selectMode, setSelectMode] = useState<'multiple' | undefined>('multiple');
   /** handle change date */
   const handleDateChange: DatePickerProps['onChange'] = (date: any, name) => {
@@ -38,8 +37,8 @@ const AddOrUpdateAccount = ({ isActive, title, data, onCancel, onSuccess }: AddO
   const onChange = (e: RadioChangeEvent) => {
     setValue(e.target.value);
 
-    setSelectMode(e.target.value === ETYPE_ACCOUNT.STAFF ? 'multiple' : undefined);
-    if (e.target.value === ETYPE_ACCOUNT.PRINCIPAL) {
+    setSelectMode(e.target.value === EROLE_CONVERT.STAFF ? 'multiple' : undefined);
+    if (e.target.value === EROLE_CONVERT.PRINCIPAL) {
       form.setFieldValue('schoolIds', undefined);
     }
   };
@@ -57,9 +56,9 @@ const AddOrUpdateAccount = ({ isActive, title, data, onCancel, onSuccess }: AddO
         const params = {
           ...rest,
           schoolIds: formattedSchool,
-          avatar:
-            'https://static0.gamerantimages.com/wordpress/wp-content/uploads/2022/11/gojo-satoru.jpg?q=50&fit=contain&w=1140&h=&dpr=1.5',
+          avatar: '',
         };
+
         if (data?.id) {
           const { password, ...rest } = params;
           await updateAccountAPI({ ...rest, id: data?.id });
@@ -80,8 +79,8 @@ const AddOrUpdateAccount = ({ isActive, title, data, onCancel, onSuccess }: AddO
   useEffect(() => {
     const handleGetListSchool = async () => {
       try {
-        const res = await getListSchoolAPI({ size: DEFAULT_SIZE_PAGE_MAX, page: DEFAULT_PAGE_NUMBER });
-        setListSchool(res?.data[0]);
+        const res = await getListSchoolAPI({ pageSize: DEFAULT_SIZE_PAGE_MAX, page: DEFAULT_PAGE_NUMBER });
+        setListSchool(res?.data);
       } catch (error: any) {
         message.error(error?.message);
       }
@@ -98,19 +97,20 @@ const AddOrUpdateAccount = ({ isActive, title, data, onCancel, onSuccess }: AddO
         try {
           const res = await getDetailUserAPI(data?.id);
           const setInitialForm: IAccount = {
+            avatar: '',
             email: res?.data?.email,
-            role: res?.data?.role,
-            phoneNumber: Number(res?.data?.phoneNumber),
+            roleId: res?.data?.roleId,
+            phoneNumber: res?.data?.phoneNumber,
             fullName: res?.data?.fullName,
             dob: res?.data?.dob ? dayjs(res?.data?.dob) : undefined,
             schoolIds:
-              res?.data?.role === ETYPE_ACCOUNT.STAFF
+              res?.data?.roleId === EROLE_CONVERT.STAFF
                 ? res?.data?.schools?.map((item: any) => {
                     return item?.id;
                   })
                 : res?.data?.schools[0]?.id,
           };
-          setSelectMode(res?.data?.role === ETYPE_ACCOUNT.STAFF ? 'multiple' : undefined);
+          setSelectMode(res?.data?.roleId === EROLE_CONVERT.STAFF ? 'multiple' : undefined);
           form?.setFieldsValue(setInitialForm);
         } catch (error: any) {
           message.error(error?.message);
@@ -136,18 +136,24 @@ const AddOrUpdateAccount = ({ isActive, title, data, onCancel, onSuccess }: AddO
       onCancel={handleCancelModal}
       className="modal-accoutn-management__container"
     >
-      <Form form={form} layout="vertical" className="addOrUpdate-management_form" onFinish={handleSubmit}>
+      <Form
+        form={form}
+        initialValues={{ roleId: EROLE_CONVERT.STAFF }}
+        layout="vertical"
+        className="addOrUpdate-management_form"
+        onFinish={handleSubmit}
+      >
         <Row gutter={[10, 0]}>
           <Col span={24}>
             <Divider />
           </Col>
           <Col span={24}>
-            <Form.Item label="Loại tài khoản :" name="role" required={false}>
-              <Radio.Group onChange={onChange} defaultValue={ETYPE_ACCOUNT.STAFF} value={value}>
-                <Radio value={ETYPE_ACCOUNT.STAFF}>
+            <Form.Item label="Loại tài khoản :" name="roleId" required={false}>
+              <Radio.Group onChange={onChange} defaultValue={EROLE_CONVERT.STAFF} value={value}>
+                <Radio value={EROLE_CONVERT.STAFF}>
                   <Typography.Text className="title-text-radio_modal">Nhân viên kỹ thuật</Typography.Text>
                 </Radio>
-                <Radio value={ETYPE_ACCOUNT.PRINCIPAL}>
+                <Radio value={EROLE_CONVERT.PRINCIPAL}>
                   <Typography.Text className="title-text-radio_modal">Nhà trường</Typography.Text>
                 </Radio>
               </Radio.Group>
@@ -260,6 +266,7 @@ const AddOrUpdateAccount = ({ isActive, title, data, onCancel, onSuccess }: AddO
               />
             </Form.Item>
           </Col>
+
           <Col span={24}>
             <Button icon={<SortDescendingIcon />} loading={isLoading} htmlType="submit" className="btn btn-primary">
               {data?.id ? 'Cập nhật' : 'Thêm tài khoản'}

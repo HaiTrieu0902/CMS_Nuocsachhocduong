@@ -9,15 +9,15 @@ export const DEFAULT_PAGE_NUMBER = 1;
 
 export const TYPES_ACCOUNT = [
   {
-    value: 'Admin',
+    value: '96e3ba98-368c-4509-baf2-9033d2b1a10e',
     label: 'Quản trị viên',
   },
   {
-    value: 'Principal',
-    label: 'Hiệu trưởng',
+    value: '5554872b-ee57-497a-b9fc-d2c3cd08bcb7',
+    label: 'Quản lý thiết bị trường học',
   },
   {
-    value: 'Staff',
+    value: '1aaa4422-d200-4fd8-b259-78875e823d06',
     label: 'Nhân viên kỹ thuật',
   },
 ];
@@ -65,6 +65,21 @@ export const TYPE_PROBLEM = [
   {
     value: 'BD',
     label: 'Bảo dưỡng',
+  },
+];
+
+export const ROLES = [
+  {
+    value: '5554872b-ee57-497a-b9fc-d2c3cd08bcb7',
+    title: 'PRINCIPAL',
+  },
+  {
+    value: '1aaa4422-d200-4fd8-b259-78875e823d06',
+    title: 'STAFF',
+  },
+  {
+    value: 'c1b2a78f-7652-4a63-83a6-e7be987900e6',
+    title: 'ADMIN',
   },
 ];
 

@@ -17,16 +17,16 @@ import { IDataCommon, IGetListParamCommon, TableParams } from '@/models/common.m
 import { getListCategoryAPI } from '@/services/api/category';
 import { Button, Col, Form, Row, Table, TableColumnsType, message } from 'antd';
 import React, { useEffect, useState } from 'react';
-import AddOrUpdateContract from './AddOrUpdateContract';
-import './Contract.scss';
+import AddOrUpdateInstall from './AddOrUpdateInstall';
+import './Install.scss';
 
-const ContractManagement: React.FC = () => {
+const InstallManagement: React.FC = () => {
   const [form] = Form.useForm();
   const { isLoading, withLoading } = useLoading();
   const {
-    stateModal: editOrAddContractState,
-    toggleModal: toggleEditOrAddContractModal,
-    offModal: offEditOrAddContractModal,
+    stateModal: editOrAddInstallState,
+    toggleModal: toggleEditOrAddInstallModal,
+    offModal: offEditOrAddInstallModal,
   } = useModal();
   const [listCategory, setListCategory] = useState<IDataCommon[]>();
   const [tableParams, setTableParams] = useState<TableParams>({
@@ -35,7 +35,7 @@ const ContractManagement: React.FC = () => {
 
   /** handle ToggleModal */
   const handleToggleModal = () => {
-    toggleEditOrAddContractModal(true, 'add', {})();
+    toggleEditOrAddInstallModal(true, 'add', {})();
   };
 
   /** handle submit */
@@ -53,7 +53,7 @@ const ContractManagement: React.FC = () => {
   const handleGetListCategory = async (values: IGetListParamCommon) => {
     await withLoading(async () => {
       try {
-        const res = await getListCategoryAPI({ ...values, type: 'contract' });
+        const res = await getListCategoryAPI({ ...values });
         setListCategory(res?.data[0]);
         setTableParams({
           ...tableParams,
@@ -119,7 +119,7 @@ const ContractManagement: React.FC = () => {
   /* Inittial value for root app */
   useEffect(() => {
     handleGetListCategory({
-      size: tableParams?.pagination?.pageSize as number,
+      pageSize: tableParams?.pagination?.pageSize as number,
       page: tableParams?.pagination?.current as number,
     });
   }, [tableParams.pagination?.current, tableParams.pagination?.pageSize]);
@@ -161,13 +161,13 @@ const ContractManagement: React.FC = () => {
           pagination={tableParams.pagination}
         />
       </Container>
-      <AddOrUpdateContract
-        onCancel={offEditOrAddContractModal}
-        isActive={editOrAddContractState.open}
-        data={editOrAddContractState?.data}
+      <AddOrUpdateInstall
+        onCancel={offEditOrAddInstallModal}
+        isActive={editOrAddInstallState.open}
+        data={editOrAddInstallState?.data}
         onSuccess={() =>
           handleGetListCategory({
-            size: tableParams?.pagination?.pageSize as number,
+            pageSize: tableParams?.pagination?.pageSize as number,
             page: tableParams?.pagination?.current as number,
           })
         }
@@ -176,4 +176,4 @@ const ContractManagement: React.FC = () => {
   );
 };
 
-export default React.memo(ContractManagement);
+export default React.memo(InstallManagement);

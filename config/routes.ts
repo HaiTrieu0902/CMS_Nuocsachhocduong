@@ -151,12 +151,12 @@ export default [
     hideInMenu: true,
   },
 
-  /* contract */
+  /* install */
   {
-    path: '/contract',
-    name: 'Quản lý hợp đồng',
+    path: '/install',
+    name: 'Quản lý hồ sơ lắp đặt',
     icon: 'appstore',
-    component: './Contract',
+    component: './Install',
   },
 
   {

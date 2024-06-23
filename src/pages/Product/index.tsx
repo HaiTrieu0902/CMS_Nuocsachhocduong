@@ -78,18 +78,18 @@ const ProductManagement: React.FC = () => {
     setSearchParams((prevParams) => ({
       ...prevParams,
       page: pagination.current,
-      size: pagination.pageSize,
+      pageSize: pagination.pageSize,
     }));
   };
 
   /** handle submit */
   const handleSubmitSearchProduct = async (values: any) => {
-    setSearchParams({
-      pageSize: DEFAULT_SIZE_PAGE,
+    setSearchParams((prevParams) => ({
+      ...prevParams,
       page: DEFAULT_PAGE_NUMBER,
-      search: values?.search?.trim() || '',
+      search: values?.search || '',
       categoryProductId: values?.categoryId || '',
-    });
+    }));
   };
 
   /** handleOnSubmitDelete */

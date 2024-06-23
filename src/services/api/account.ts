@@ -15,14 +15,13 @@ export const getDetailUserAPI = (id: string) => {
 };
 
 export const createAccountAPI = (params: IAccount) => {
-  return client.post('user/create', params).then((res: AxiosResponse<any>) => res.data);
+  return client.post('user/create-user', params).then((res: AxiosResponse<any>) => res.data);
 };
 
 export const updateAccountAPI = (params: IAccount) => {
-  const { id, ...rest } = params;
-  return client.put(`user/update-user/${id}`, rest).then((res: AxiosResponse<any>) => res.data);
+  return client.put(`user/update-user`, params).then((res: AxiosResponse<any>) => res.data);
 };
 
 export const deleteUserAPI = (id: string) => {
-  return client.delete(`user/delete/${id}`).then((res: AxiosResponse<any>) => res.data);
+  return client.delete(`user/delete-user/${id}`).then((res: AxiosResponse<any>) => res.data);
 };

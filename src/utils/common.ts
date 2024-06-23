@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { EMaintenanceConvert, EMaintenanceStatus } from '@/constants/enum';
+import { EMaintenanceConvert, EMaintenanceStatus, ETYPE_ACCOUNT } from '@/constants/enum';
 import { BASE_URL } from '@/constants/urls';
 import { UploadImagesMultiplieApi } from '@/services/api/common';
 import { Editor } from '@ckeditor/ckeditor5-core';
@@ -286,13 +286,16 @@ export const getStatusText = (status: EMaintenanceStatus): string => {
 };
 
 export const getRoleDescription = (role: string) => {
+  console.log('role', role);
   switch (role) {
-    case 'Admin':
+    case ETYPE_ACCOUNT?.ADMIN:
       return 'Quản trị viên';
-    case 'Staff':
+    case ETYPE_ACCOUNT?.STAFF:
       return 'Nhân viên kỹ thuật';
+    case ETYPE_ACCOUNT?.PRINCIPAL:
+      return 'Quản lý thiết bị lọc nước nhà trường';
     default:
-      return 'Hiệu trưởng';
+      return 'Quản trị viên';
   }
 };
 
@@ -325,7 +328,7 @@ const headerDescriptions: RouteDescription[] = [
   { pattern: /^\/school\/invest$/, description: 'TRƯỜNG HỌC' },
   { pattern: /^\/school\/agreements\/[^/]+$/, description: 'TRƯỜNG HỌC' }, // id
 
-  { pattern: /^\/contract$/, description: 'HỢP ĐỒNG' },
+  { pattern: /^\/install$/, description: 'HỢP ĐỒNG' },
 ];
 
 export const getTextHeaderDescription = (pathname: string): string => {

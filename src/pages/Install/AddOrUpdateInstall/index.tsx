@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { InputUI, PlusIcon, XCircleIcon } from '@/components';
-import { Button, Col, Divider, Form, Input, Modal, Row, Typography } from 'antd';
+import { Button, Col, Divider, Form, Modal, Row, Typography } from 'antd';
 import React from 'react';
-import './AddOrUpdateContract.scss';
-const { TextArea } = Input;
-interface AddOrUpdateContractProps {
+import './AddOrUpdateInstall.scss';
+
+interface AddOrUpdateInstallProps {
   isActive: boolean;
   title?: string;
   data?: any;
@@ -12,7 +12,7 @@ interface AddOrUpdateContractProps {
   onSuccess: () => void;
 }
 
-const AddOrUpdateContract = ({ isActive, title, data, onCancel, onSuccess }: AddOrUpdateContractProps) => {
+const AddOrUpdateInstall = ({ isActive, title, data, onCancel, onSuccess }: AddOrUpdateInstallProps) => {
   const [form] = Form.useForm();
 
   const handleCancelModal = () => {
@@ -84,4 +84,4 @@ const AddOrUpdateContract = ({ isActive, title, data, onCancel, onSuccess }: Add
   );
 };
 
-export default React.memo(AddOrUpdateContract);
+export default React.memo(AddOrUpdateInstall);
