@@ -40,7 +40,6 @@ const AccountManagement: React.FC = () => {
     search: '',
     roleId: '',
   });
-  console.log('📢 [index.tsx:43]', listUser);
 
   const handleToggleModal = () => {
     toggleEditOrAddModal(true, 'add', {})();

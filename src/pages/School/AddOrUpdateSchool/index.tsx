@@ -1,12 +1,12 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { InputUI, PlusIcon, XCircleIcon } from '@/components';
+import { authUser } from '@/constants';
 import useLoading from '@/hooks/useLoading';
 import { triggerLoadingSchool } from '@/redux/school.slice';
-import { createSchoolAPI } from '@/services/api/school';
+import { createSchoolAPI, updateSChoolAPI } from '@/services/api/school';
 import { useAppDispatch } from '@/store';
 import { Button, Col, Divider, Form, Modal, Row, Typography, message } from 'antd';
-import dayjs from 'dayjs';
-import React from 'react';
+import React, { useEffect } from 'react';
 import './AddOrUpdateSchool.scss';
 
 interface AddOrUpdateSchoolProps {
@@ -29,15 +29,33 @@ const AddOrUpdateSchool = ({ isActive, title, data, onCancel }: AddOrUpdateSchoo
   const handleSubmit = async (values: any) => {
     await withLoading(async () => {
       try {
-        const res = await createSchoolAPI({ ...values, dateContract: dayjs() });
+        if (data?.id) {
+          await updateSChoolAPI({ ...values, isDelete: false, accountId: authUser?.id, id: data?.id });
+          message.success('Cập nhật trường học thành công');
+        } else {
+          await createSchoolAPI({ ...values, isDelete: false, accountId: authUser?.id });
+          message.success('Tạo trường học thành công');
+        }
         dispatch(triggerLoadingSchool());
-        message.success('Tạo trường học thành công');
+
         handleCancelModal();
       } catch (error: any) {
-        message.error(error?.message);
+        message.error(error?.error || error?.message);
       }
     });
   };
+
+  useEffect(() => {
+    if (data?.id) {
+      const initialForm = {
+        name: data?.name,
+        email: data?.email,
+        address: data?.address,
+        phoneNumber: data?.phoneNumber,
+      };
+      form.setFieldsValue(initialForm);
+    }
+  }, [isActive]);
 
   return (
     <Modal
@@ -46,7 +64,11 @@ const AddOrUpdateSchool = ({ isActive, title, data, onCancel }: AddOrUpdateSchoo
       destroyOnClose={true}
       closeIcon={<XCircleIcon />}
       centered
-      title={<Typography.Title className="title-header_modal">Nhập dữ liệu trường mới</Typography.Title>}
+      title={
+        <Typography.Title className="title-header_modal">
+          {data?.id ? 'Cập nhật trường học' : 'Tạo trường học mới'}
+        </Typography.Title>
+      }
       open={isActive}
       onCancel={handleCancelModal}
       className="modal-school-management__container"
@@ -58,33 +80,33 @@ const AddOrUpdateSchool = ({ isActive, title, data, onCancel }: AddOrUpdateSchoo
           </Col>
           <Col span={24}>
             <Form.Item
-              label="Mã trường học :"
-              name="code"
-              required={true}
-              rules={[
-                {
-                  required: true,
-                  message: 'Mã trường học không được trống',
-                },
-              ]}
-            >
-              <InputUI placeholder="Nhập mã trường học" />
-            </Form.Item>
-          </Col>
-
-          <Col span={24}>
-            <Form.Item
               label="Tên trường học :"
               name="name"
               required={true}
               rules={[
                 {
                   required: true,
-                  message: 'Tên trường học không được để trống',
+                  message: 'Tên trường học không được trống',
                 },
               ]}
             >
               <InputUI placeholder="Nhập tên trường học" />
+            </Form.Item>
+          </Col>
+
+          <Col span={24}>
+            <Form.Item
+              label="Email trường học :"
+              name="email"
+              required={true}
+              rules={[
+                {
+                  required: true,
+                  message: 'Email trường học không được để trống',
+                },
+              ]}
+            >
+              <InputUI placeholder="Nhập email trường học" />
             </Form.Item>
           </Col>
           <Col span={24}>
@@ -103,9 +125,29 @@ const AddOrUpdateSchool = ({ isActive, title, data, onCancel }: AddOrUpdateSchoo
             </Form.Item>
           </Col>
 
+          <Col span={24}>
+            <Form.Item
+              label="Số điện thoại trường học"
+              name="phoneNumber"
+              required={true}
+              rules={[
+                {
+                  required: true,
+                  message: 'Số điện thoại trường học không được để trống',
+                },
+                {
+                  pattern: /^[0-9]+$/,
+                  message: 'Số điện thoại chỉ được chứa các ký tự số từ 0 đến 9',
+                },
+              ]}
+            >
+              <InputUI placeholder="Nhập số điện thoại trường học" />
+            </Form.Item>
+          </Col>
+
           <Col span={24} className="mt-24">
             <Button loading={isLoading} icon={<PlusIcon />} htmlType="submit" className="btn btn-primary">
-              Thêm trường học
+              {data?.id ? 'Cập nhật' : 'Thêm trường học'}
             </Button>
           </Col>
         </Row>

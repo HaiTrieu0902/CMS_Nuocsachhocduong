@@ -2,6 +2,7 @@ import { IGetListParamCommon } from './common.model';
 
 export interface IGetQuerySchool extends IGetListParamCommon {
   accountId?: string;
+  isDelete?: boolean;
 }
 
 export interface ISchool {
