@@ -1,7 +1,10 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { InputUI, PlusIcon, SelectUI, XCircleIcon } from '@/components';
+import useLoading from '@/hooks/useLoading';
+import { IAccount } from '@/models/account.model';
 import { IInstallRecord } from '@/models/install.model';
-import { getDetailInstallAPI } from '@/services/api/install';
+import { getListUserBySchoolAPI } from '@/services/api/account';
+import { getDetailInstallAPI, updateInstallAPI } from '@/services/api/install';
 import { Button, Col, Divider, Form, Modal, Row, Typography, message } from 'antd';
 import React, { useEffect, useState } from 'react';
 import './AddOrUpdateInstall.scss';
@@ -15,8 +18,10 @@ interface AddOrUpdateInstallProps {
 }
 
 const AddOrUpdateInstall = ({ isActive, title, data, onCancel, onSuccess }: AddOrUpdateInstallProps) => {
+  const { isLoading, withLoading } = useLoading();
   const [form] = Form.useForm();
   const [dataDetail, setDataDetail] = useState<IInstallRecord>({} as IInstallRecord);
+  const [userBySchool, setUserBySchool] = useState<IAccount[]>([]);
   const [quantity, setQuantity] = useState<number>(1);
   const handleCancelModal = () => {
     onCancel(false);
@@ -25,8 +30,27 @@ const AddOrUpdateInstall = ({ isActive, title, data, onCancel, onSuccess }: AddO
   };
 
   const handleSubmit = async (values: any) => {
-    try {
-    } catch (error: any) {}
+    await withLoading(async () => {
+      try {
+        const params = {
+          id: data?.id,
+          staffId: values?.staffId,
+          warrantyPeriod: values?.warrantyPeriod,
+          quantity: values?.quantity,
+          totalAmount: Number(
+            ((dataDetail?.product?.price as number) -
+              ((dataDetail?.product?.price as number) * (dataDetail?.product?.discount as number)) / 100) *
+              values?.quantity,
+          ),
+        };
+        const res = await updateInstallAPI(params);
+        onSuccess();
+        handleCancelModal();
+        message.success('Cập nhật hồ sơ lắp đặt thành công');
+      } catch (error: any) {
+        message.error(error?.message);
+      }
+    });
   };
 
   const onChangeQuantity = (e: any) => {
@@ -40,6 +64,8 @@ const AddOrUpdateInstall = ({ isActive, title, data, onCancel, onSuccess }: AddO
           const res = await getDetailInstallAPI(data?.id);
           setDataDetail(res?.data);
           setQuantity(res?.data?.quantity || data?.quantity);
+          const userSchool = await getListUserBySchoolAPI(data?.school?.id);
+          setUserBySchool(userSchool?.data);
         } catch (error: any) {
           message.error(error?.message);
         }
@@ -102,7 +128,10 @@ const AddOrUpdateInstall = ({ isActive, title, data, onCancel, onSuccess }: AddO
               label="Nhân viên kỹ thuật: "
               name="staffId"
             >
-              <SelectUI placeholder="Chọn nhân viên kỹ thuật" options={[]} />
+              <SelectUI
+                placeholder="Chọn nhân viên kỹ thuật"
+                options={userBySchool?.map((item) => ({ value: item?.id, label: item?.fullName }))}
+              />
             </Form.Item>
           </Col>
 
@@ -182,7 +211,7 @@ const AddOrUpdateInstall = ({ isActive, title, data, onCancel, onSuccess }: AddO
             </Row>
           </Col>
           <Col span={24} className="mt-16">
-            <Button icon={<PlusIcon />} htmlType="submit" className="btn btn-add">
+            <Button loading={isLoading} icon={<PlusIcon />} htmlType="submit" className="btn btn-add">
               Cập nhật hồ sơ lắp đặt
             </Button>
           </Col>

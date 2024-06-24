@@ -61,7 +61,7 @@ export interface IInstall {
   schoolId?: string;
   statusId?: string;
   accountId?: string;
-  totalAmount?: 1200000;
+  totalAmount?: number;
   staffId: string;
-  warrantyPeriod: 12;
+  warrantyPeriod: number;
 }

@@ -452,3 +452,7 @@ html *::-webkit-scrollbar-track {
   margin-bottom: 8px;
   font-size: 14px;
 }
+
+.disable {
+  cursor: not-allowed;
+}

@@ -7,7 +7,7 @@ export const getListUserAPI = (params: IGetListParamsUser) => {
 };
 
 export const getListUserBySchoolAPI = (id: string) => {
-  return client.get(`user/get-user-schoolId/${id}`).then((res: AxiosResponse<any>) => res.data);
+  return client.get(`user/get-user-school/${id}`).then((res: AxiosResponse<any>) => res.data);
 };
 
 export const getDetailUserAPI = (id: string) => {

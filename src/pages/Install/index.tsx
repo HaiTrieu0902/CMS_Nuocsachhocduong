@@ -160,7 +160,15 @@ const InstallManagement: React.FC = () => {
       width: '10%',
       render: (text: any, row: any) => (
         <Row gutter={[8, 10]} justify={'center'}>
-          <Col onClick={() => handleToggleModal(row)} className="pointer">
+          <Col
+            onClick={() => {
+              if (row?.status?.id === ESTATUS.DELETED) {
+                return;
+              }
+              handleToggleModal(row);
+            }}
+            className={`pointer ${row?.status?.id === ESTATUS.DELETED && 'disable'}`}
+          >
             <PencilIcon />
           </Col>
         </Row>
