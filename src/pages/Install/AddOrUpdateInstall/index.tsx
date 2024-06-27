@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { InputUI, PlusIcon, SelectUI, XCircleIcon } from '@/components';
+import { ESTATUS } from '@/constants/enum';
 import useLoading from '@/hooks/useLoading';
 import { IAccount } from '@/models/account.model';
 import { IInstallRecord } from '@/models/install.model';
@@ -129,6 +130,7 @@ const AddOrUpdateInstall = ({ isActive, title, data, onCancel, onSuccess }: AddO
               name="staffId"
             >
               <SelectUI
+                disabled={data?.status?.id === ESTATUS.COMPLETED || data?.status?.id === ESTATUS.COMPLETE}
                 placeholder="Chọn nhân viên kỹ thuật"
                 options={userBySchool?.map((item) => ({ value: item?.id, label: item?.fullName }))}
               />
@@ -148,6 +150,7 @@ const AddOrUpdateInstall = ({ isActive, title, data, onCancel, onSuccess }: AddO
               name="warrantyPeriod"
             >
               <SelectUI
+                disabled={data?.status?.id === ESTATUS.COMPLETED || data?.status?.id === ESTATUS.COMPLETE}
                 placeholder="Chọn thời gian bảo hành"
                 options={[
                   {
@@ -188,6 +191,7 @@ const AddOrUpdateInstall = ({ isActive, title, data, onCancel, onSuccess }: AddO
               name="quantity"
             >
               <InputUI
+                disabled={data?.status?.id === ESTATUS.COMPLETED || data?.status?.id === ESTATUS.COMPLETE}
                 type="number"
                 value={quantity}
                 placeholder="Nhập số lượng"
@@ -211,7 +215,13 @@ const AddOrUpdateInstall = ({ isActive, title, data, onCancel, onSuccess }: AddO
             </Row>
           </Col>
           <Col span={24} className="mt-16">
-            <Button loading={isLoading} icon={<PlusIcon />} htmlType="submit" className="btn btn-add">
+            <Button
+              disabled={data?.status?.id === ESTATUS.COMPLETED || data?.status?.id === ESTATUS.COMPLETE}
+              loading={isLoading}
+              icon={<PlusIcon />}
+              htmlType="submit"
+              className="btn btn-add"
+            >
               Cập nhật hồ sơ lắp đặt
             </Button>
           </Col>

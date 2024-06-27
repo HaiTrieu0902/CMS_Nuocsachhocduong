@@ -139,9 +139,9 @@ const AddOrUpdateNews = () => {
       <div className="addOrUpdate-header-management">
         <Breadcrumb title="Thêm tin mới" />
         <Row>
-          <Button onClick={handleAddNewsOrUpdate} loading={isLoading} icon={<PlusIcon />} className="btn btn-add">
+          {/* <Button onClick={handleAddNewsOrUpdate} loading={isLoading} icon={<PlusIcon />} className="btn btn-add">
             {id ? 'Cập nhật tin' : 'Thêm tin mới'}
-          </Button>
+          </Button> */}
         </Row>
       </div>
       <Container className="mt-16">
@@ -257,6 +257,23 @@ const AddOrUpdateNews = () => {
               }}
             />
           </div>
+          <Row className="mt-20" justify={'end'} gutter={[10, 10]}>
+            <Col>
+              <Button
+                onClick={() => {
+                  history.back();
+                }}
+                className="btn btn-cancel"
+              >
+                {'Hủy thao tác'}
+              </Button>
+            </Col>
+            <Col>
+              <Button onClick={handleAddNewsOrUpdate} loading={isLoading} icon={<PlusIcon />} className="btn btn-add">
+                {id ? 'Cập nhật tin' : 'Thêm tin mới'}
+              </Button>
+            </Col>
+          </Row>
         </Form>
       </Container>
     </Row>

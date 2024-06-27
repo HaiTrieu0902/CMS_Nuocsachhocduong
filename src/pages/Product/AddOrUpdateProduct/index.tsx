@@ -156,9 +156,9 @@ const AddOrUpdateProduct = () => {
       <div className="product_action-header-management">
         <Breadcrumb title={id ? 'Cập nhật sản phẩm' : 'Thêm sản phẩm mới'} />
         <Row>
-          <Button loading={isLoading} onClick={handleAddProductOrUpdate} icon={<PlusIcon />} className="btn btn-add">
+          {/* <Button loading={isLoading} onClick={handleAddProductOrUpdate} icon={<PlusIcon />} className="btn btn-add">
             {id ? 'Lưu cập nhật' : ' Thêm sản phẩm'}
-          </Button>
+          </Button> */}
         </Row>
       </div>
 
@@ -306,6 +306,29 @@ const AddOrUpdateProduct = () => {
               }}
             />
           </div>
+
+          <Row className="mt-20" justify={'end'} gutter={[10, 10]}>
+            <Col>
+              <Button
+                onClick={() => {
+                  history.back();
+                }}
+                className="btn btn-cancel"
+              >
+                {'Hủy thao tác'}
+              </Button>
+            </Col>
+            <Col>
+              <Button
+                onClick={handleAddProductOrUpdate}
+                loading={isLoading}
+                icon={<PlusIcon />}
+                className="btn btn-add"
+              >
+                {id ? 'Cập nhật tin' : 'Thêm tin mới'}
+              </Button>
+            </Col>
+          </Row>
         </Container>
       </Form>
     </Row>

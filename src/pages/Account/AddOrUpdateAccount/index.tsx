@@ -79,7 +79,11 @@ const AddOrUpdateAccount = ({ isActive, title, data, onCancel, onSuccess }: AddO
   useEffect(() => {
     const handleGetListSchool = async () => {
       try {
-        const res = await getListSchoolAPI({ pageSize: DEFAULT_SIZE_PAGE_MAX, page: DEFAULT_PAGE_NUMBER });
+        const res = await getListSchoolAPI({
+          pageSize: DEFAULT_SIZE_PAGE_MAX,
+          page: DEFAULT_PAGE_NUMBER,
+          isDelete: false,
+        });
         setListSchool(res?.data);
       } catch (error: any) {
         message.error(error?.message);

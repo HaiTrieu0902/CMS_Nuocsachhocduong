@@ -167,7 +167,7 @@ const InstallManagement: React.FC = () => {
               }
               handleToggleModal(row);
             }}
-            className={`pointer ${row?.status?.id === ESTATUS.DELETED && 'disable'}`}
+            className={`pointer ${row?.status?.id === ESTATUS.DELETED ? 'disable' : ''}`}
           >
             <PencilIcon />
           </Col>

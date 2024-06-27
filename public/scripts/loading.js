@@ -21,6 +21,7 @@
 
         .loading-title {
           font-size: 1.1rem;
+          font-weight: 600;
         }
 
         .loading-sub-title {
@@ -191,10 +192,10 @@
           </div>
         </div>
         <div class="loading-title">
-          正在加载资源
+            NƯỚC SẠCH HỌC ĐƯỜNG
         </div>
         <div class="loading-sub-title">
-          初次加载资源可能需要较多时间 请耐心等待
+            Hệ thống đang khởi tạo, vui lòng chờ !!!
         </div>
       </div>
     `;

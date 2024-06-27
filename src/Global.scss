@@ -116,6 +116,16 @@ body {
   border-color: var(--error-regular) !important;
 }
 
+.btn-cancel {
+  background-color: var(--text-regular);
+}
+
+.btn-cancel:hover {
+  color: white !important;
+  background-color: var(--text-regular) !important;
+  border-color: var(--text-regular) !important;
+}
+
 .header-avatar__container {
   display: flex;
   flex-direction: row;
@@ -259,7 +269,7 @@ a {
   height: auto;
   // margin-bottom: 12px;
   // border-radius: 0px !important;
-  border-radius: 0px !important;
+  border-radius: 8px !important;
   .ant-pro-base-menu-inline-item-title .ant-pro-base-menu-inline-item-text {
     padding: 12px 0;
     color: var(--text-dark);
