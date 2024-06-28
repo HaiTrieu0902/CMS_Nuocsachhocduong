@@ -45,3 +45,8 @@ export enum ESTATUS {
   INPROGRESS_INSTALL = 'ea340138-fb2e-42d3-a312-6ce97a6d766a',
   DELETED = '6b06e733-c205-4c89-b5b3-c3bb9131575a',
 }
+
+export enum EMAINTENANCE {
+  BD = '8b746035-46bf-428f-b4db-b84e9b375b5f',
+  SC = 'd1e6d70f-bd4a-4acb-99bc-8801dab712cf',
+}

@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { TablePaginationConfig } from 'antd';
-import { EMaintenanceStatus } from './enum';
+import { ESTATUS } from './enum';
 
 export const DEFAULT_SIZE_PAGE = 10;
 export const DEFAULT_SIZE_PAGE_MAX = 1000;
@@ -32,19 +32,19 @@ export const TYPES_ACCOUNT_ALL = [
 
 export const STATE_MAINTENANCE = [
   {
-    value: EMaintenanceStatus.PENDING,
+    value: ESTATUS.PENDING,
     label: 'Chờ xử lý',
   },
   {
-    value: EMaintenanceStatus.INPROGRESS,
+    value: ESTATUS.INPROGRESS,
     label: 'Đang xử lý',
   },
   {
-    value: EMaintenanceStatus.COMPLETE,
+    value: ESTATUS.COMPLETE,
     label: 'Hoàn thành',
   },
   {
-    value: EMaintenanceStatus.COMPLETED,
+    value: ESTATUS.COMPLETED,
     label: 'Đã hoàn thành',
   },
 ];

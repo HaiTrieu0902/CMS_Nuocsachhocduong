@@ -108,7 +108,8 @@ export const layout: RunTimeLayoutConfig = ({ initialState, setInitialState }) =
       return <></>;
     },
     avatarProps: {
-      src: src,
+      src: 'https://static1.srcdn.com/wordpress/wp-content/uploads/2023/09/gojo-satoru-1.jpg?q=50&fit=crop&w=825&dpr=1.5',
+      // `${BASE_URL}/${src}`,
       title: '',
       render: (_, avatarChildren) => {
         return (

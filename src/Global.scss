@@ -125,6 +125,18 @@ body {
   background-color: var(--text-regular) !important;
   border-color: var(--text-regular) !important;
 }
+.text_danger {
+  color: var(--error-regular);
+}
+.text_inprogress {
+  color: var(--infomation-regular);
+}
+.text_complete {
+  color: var(--primary-dark);
+}
+.text_pending {
+  color: var(--warning-regular);
+}
 
 .header-avatar__container {
   display: flex;

@@ -1,19 +1,28 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { InputUI, SelectUI, SortDescendingIcon, XCircleIcon } from '@/components';
-import { DEFAULT_PAGE_NUMBER, DEFAULT_SIZE_PAGE_MAX } from '@/constants';
-import { EMaintenanceStatus } from '@/constants/enum';
+import { DEFAULT_PAGE_NUMBER, DEFAULT_SIZE_PAGE_MAX, authUser } from '@/constants';
+import { ESTATUS } from '@/constants/enum';
 import { BASE_URL } from '@/constants/urls';
 import useLoading from '@/hooks/useLoading';
 import { IAccount } from '@/models/account.model';
-import { Ischool } from '@/models/school.model';
+import { IInstallRecord } from '@/models/install.model';
+import { ISchool } from '@/models/school.model';
 import { getListUserBySchoolAPI } from '@/services/api/account';
+import { getListInstallAPI } from '@/services/api/install';
 import { createMaintenanceAPI, updateMaintenanceAPI } from '@/services/api/maintenance';
 import { getListSchoolAPI } from '@/services/api/school';
-import { allowedFormatsImage, handleImageProcessing, onPreviewAllFile } from '@/utils/common';
+import {
+  allowedFormatsImage,
+  handleGetCategoryMaintenance,
+  handleGetCategoryMaintenanceId,
+  handleImageProcessing,
+  onPreviewAllFile,
+} from '@/utils/common';
 import { UploadOutlined } from '@ant-design/icons';
 import { Button, Col, Divider, Form, Input, Modal, Row, Typography, Upload, UploadProps, message } from 'antd';
 import { UploadFile } from 'antd/lib';
-import React, { useEffect, useState } from 'react';
+import { format } from 'date-fns';
+import React, { useCallback, useEffect, useState } from 'react';
 import { TYPE_PROBLEM } from './../../../constants/index';
 import './AddOrUpdateMaintain.scss';
 const { TextArea } = Input;
@@ -27,16 +36,15 @@ interface AddOrUpdateMaintainProps {
 
 const AddOrUpdateMaintain = ({ isActive, title, data, onCancel, onSuccess }: AddOrUpdateMaintainProps) => {
   const [form] = Form.useForm();
-  const [listSchool, setListSchool] = useState<Ischool[]>();
+  const [listSchool, setListSchool] = useState<ISchool[]>();
   const [listAccount, setListAccount] = useState<IAccount[]>([]);
+  const [listInstallRecord, setListInstallRecord] = useState<IInstallRecord[]>([]);
   const [fileList, setFileList] = useState<UploadFile[]>([]);
   const { isLoading, withLoading } = useLoading();
-  const [schoolId, setSchoolId] = useState<string>();
 
   const handleCancelModal = () => {
     onCancel(false);
     form.resetFields();
-    setSchoolId(undefined);
   };
 
   /* Props upload file list */
@@ -56,39 +64,76 @@ const AddOrUpdateMaintain = ({ isActive, title, data, onCancel, onSuccess }: Add
 
   /** handle call staff by school */
   const handleGetListStaffBySchool = async (id: string) => {
-    const res = await getListUserBySchoolAPI(id);
-    setListAccount(res?.data || []);
+    const userSchool = await getListUserBySchoolAPI(id);
+    setListAccount(userSchool?.data || []);
+  };
+
+  const handleGetListInstallRecord = async (id: string, condition?: string) => {
+    const res = await getListInstallAPI({
+      pageSize: DEFAULT_SIZE_PAGE_MAX,
+      page: DEFAULT_PAGE_NUMBER,
+      schoolId: id,
+      statusId: ESTATUS.COMPLETED,
+    });
+    setListInstallRecord(res?.data);
+
+    if (condition) {
+      const maintain = handleGetCategoryMaintenance(res?.data, condition as string);
+      form.setFieldValue('categoryMaintenanceId', maintain);
+    }
   };
 
   /** handle on change school */
-  const handleOnChangeSchool = async (e: string) => {
-    setSchoolId(e);
-    handleGetListStaffBySchool(e);
-    form.setFieldValue('assignedTo', undefined);
+  const handleOnChangeSchool = async (e: string, type: string) => {
+    if (type === 'school') {
+      handleGetListStaffBySchool(e);
+      handleGetListInstallRecord(e);
+      form.setFieldValue('staffId', undefined);
+      form.setFieldValue('installRecordId', undefined);
+    } else {
+      const maintain = handleGetCategoryMaintenance(listInstallRecord, e);
+      form.setFieldValue('categoryMaintenanceId', maintain);
+    }
   };
 
   /** handle submit */
-  const handleSubmit = async (values: any) => {
-    await withLoading(async () => {
-      try {
-        const imageUrls = await handleImageProcessing(fileList);
-        if (data?.id) {
-          const res = await updateMaintenanceAPI({
-            ...values,
-            images: imageUrls,
-            id: data?.id,
-          });
-        } else {
-          const res = await createMaintenanceAPI({ ...values, images: imageUrls });
+  const handleSubmit = useCallback(
+    async (values: any) => {
+      await withLoading(async () => {
+        try {
+          const imageUrls = await handleImageProcessing(fileList);
+          const params = {
+            categoryMaintenanceId: handleGetCategoryMaintenanceId(
+              listInstallRecord,
+              form?.getFieldValue('installRecordId'),
+            ),
+            accountId: authUser?.id || '68821b5d-176c-4e2d-a0ca-2cd7d0641d47',
+            installRecordId: values?.installRecordId,
+            schoolId: values?.schoolId,
+            staffId: values?.staffId,
+            statusId: ESTATUS.PENDING,
+            title: values?.title,
+            reason: values?.reason,
+            images_request: imageUrls,
+          };
+          if (data?.id) {
+            await updateMaintenanceAPI({
+              ...params,
+              id: data?.id,
+            });
+          } else {
+            await createMaintenanceAPI({ ...params });
+          }
+          onSuccess();
+          message.success(`${data?.id ? 'Sửa sự cố thành công' : 'Tạo sự cố thành công'}`);
+          handleCancelModal();
+        } catch (error: any) {
+          message.error(error?.message);
         }
-        onSuccess();
-        message.success(`${data?.id ? 'Sửa sự cố thành công' : 'Tạo sự cố thành công'}`);
-        handleCancelModal();
-      } catch (error: any) {
-        message.error(error?.message);
-      }
-    });
-  };
+      });
+    },
+    [form?.getFieldValue('installRecordId'), fileList],
+  );
 
   /* Changed file list */
   const onChangeFileList: UploadProps['onChange'] = ({ fileList: newFileList }) => {
@@ -100,8 +145,8 @@ const AddOrUpdateMaintain = ({ isActive, title, data, onCancel, onSuccess }: Add
   useEffect(() => {
     const handleGetListSchoolAndUSer = async () => {
       try {
-        const res = await getListSchoolAPI({ size: DEFAULT_SIZE_PAGE_MAX, page: DEFAULT_PAGE_NUMBER });
-        setListSchool(res?.data ? res?.data[0] : []);
+        const res = await getListSchoolAPI({ pageSize: DEFAULT_SIZE_PAGE_MAX, page: DEFAULT_PAGE_NUMBER });
+        setListSchool(res?.data ? res?.data : []);
       } catch (error: any) {}
     };
     if (isActive) {
@@ -111,25 +156,25 @@ const AddOrUpdateMaintain = ({ isActive, title, data, onCancel, onSuccess }: Add
 
   /** Set Initial Form */
   useEffect(() => {
-    if (data?.id) {
-      const parts = data?.code?.split('-');
-      const firstPart = parts[0];
-
+    if (data?.id && isActive) {
+      const { school, installRecord, title, reason, staff, images_request, images_response, id } = data;
       const initialForm = {
-        schoolId: data?.schoolId,
-        type: firstPart,
-        title: data?.title,
-        reason: data?.reason,
-        assignedTo: data?.assignedTo,
+        schoolId: school?.id,
+        installRecordId: installRecord?.id,
+        categoryMaintenanceId: handleGetCategoryMaintenance(listInstallRecord, installRecord?.id),
+        title,
+        reason,
+        staffId: staff?.id,
       };
-      handleGetListStaffBySchool(data?.schoolId);
-      setSchoolId(data?.schoolId);
+      handleGetListStaffBySchool(school?.id);
+      handleGetListInstallRecord(school?.id, installRecord?.id);
       form.setFieldsValue(initialForm);
-      const fileListData = data?.images.map((item: any) => ({
-        uid: item.id,
-        name: item.url.split('/').pop(),
+      const allImages = images_response?.length > 0 ? [...images_request, ...images_response] : images_request;
+      const fileListData = allImages?.map((item: any) => ({
+        uid: item.split('/').pop(),
+        name: item.split('/').pop(),
         status: 'hasExits',
-        url: `${BASE_URL}${item.url}`,
+        url: `${BASE_URL}/${item}`,
       }));
       setFileList(fileListData);
     } else {
@@ -140,7 +185,7 @@ const AddOrUpdateMaintain = ({ isActive, title, data, onCancel, onSuccess }: Add
 
   return (
     <Modal
-      width={500}
+      width={700}
       footer={null}
       destroyOnClose={true}
       closeIcon={<XCircleIcon />}
@@ -157,7 +202,7 @@ const AddOrUpdateMaintain = ({ isActive, title, data, onCancel, onSuccess }: Add
           </Col>
           <Col span={24}>
             <Form.Item
-              label="Trường học :"
+              label="Trường học gặp sự cố :"
               name="schoolId"
               required={true}
               rules={[
@@ -168,7 +213,11 @@ const AddOrUpdateMaintain = ({ isActive, title, data, onCancel, onSuccess }: Add
               ]}
             >
               <SelectUI
-                disabled={data?.status === EMaintenanceStatus.COMPLETE || data?.status === EMaintenanceStatus.COMPLETED}
+                disabled={
+                  data?.status?.id === ESTATUS.COMPLETE ||
+                  data?.status?.id === ESTATUS.COMPLETED ||
+                  data?.status?.id === ESTATUS.INPROGRESS
+                }
                 showSearch
                 maxTagCount={'responsive'}
                 filterOption={(input: any, option: any) =>
@@ -184,28 +233,55 @@ const AddOrUpdateMaintain = ({ isActive, title, data, onCancel, onSuccess }: Add
                     label: item?.name,
                   };
                 })}
-                onChange={(e) => handleOnChangeSchool(e)}
+                onChange={(e) => handleOnChangeSchool(e, 'school')}
               />
             </Form.Item>
           </Col>
 
           <Col span={24}>
             <Form.Item
-              label="Sự cố :"
-              name="type"
+              label="Thiết bị đã lắp đặt :"
+              name="installRecordId"
               required={true}
               rules={[
                 {
                   required: true,
-                  message: 'Sự cố không được trống',
+                  message: 'Thiết bị đã lắp đặt không được trống',
                 },
               ]}
             >
               <SelectUI
-                disabled={data?.status === EMaintenanceStatus.COMPLETE || data?.status === EMaintenanceStatus.COMPLETED}
-                placeholder="Chọn trường học phụ trách"
-                options={TYPE_PROBLEM}
+                disabled={
+                  data?.status?.id === ESTATUS.COMPLETE ||
+                  data?.status?.id === ESTATUS.COMPLETED ||
+                  data?.status?.id === ESTATUS.INPROGRESS ||
+                  !form.getFieldValue('schoolId')
+                }
+                showSearch
+                maxTagCount={'responsive'}
+                filterOption={(input: any, option: any) =>
+                  (option?.label?.toLowerCase() ?? '').includes(input.toLowerCase())
+                }
+                filterSort={(optionA: any, optionB: any) =>
+                  (optionA?.label?.toLowerCase() ?? '').localeCompare(optionB?.label?.toLowerCase())
+                }
+                placeholder="Chọn thiết bị đã lắp đặt"
+                options={listInstallRecord?.map((item) => {
+                  return {
+                    value: item?.id,
+                    label: `${item?.product?.name} --- Lắp đặt lúc: ${
+                      item?.timeInstall ? format(new Date(item?.timeInstall), 'dd/MM/yyyy HH:mm:ss') : 'N/A'
+                    } `,
+                  };
+                })}
+                onChange={(e) => handleOnChangeSchool(e, 'install')}
               />
+            </Form.Item>
+          </Col>
+
+          <Col span={24}>
+            <Form.Item label="Sự cố :" name="categoryMaintenanceId">
+              <SelectUI disabled placeholder="Loại sự cố" options={TYPE_PROBLEM} />
             </Form.Item>
           </Col>
 
@@ -222,7 +298,11 @@ const AddOrUpdateMaintain = ({ isActive, title, data, onCancel, onSuccess }: Add
               ]}
             >
               <InputUI
-                disabled={data?.status === EMaintenanceStatus.COMPLETE || data?.status === EMaintenanceStatus.COMPLETED}
+                disabled={
+                  data?.status?.id === ESTATUS.COMPLETE ||
+                  data?.status?.id === ESTATUS.COMPLETED ||
+                  data?.status?.id === ESTATUS.INPROGRESS
+                }
                 placeholder="Nhập tiêu đề"
               />
             </Form.Item>
@@ -237,14 +317,18 @@ const AddOrUpdateMaintain = ({ isActive, title, data, onCancel, onSuccess }: Add
                   required: true,
                   message: 'Hiện trạng không được trống',
                 },
-                // {
-                //   max: 300,
-                //   message: 'Tối đa 300 ký tự',
-                // },
+                {
+                  max: 200,
+                  message: 'Tối đa 200 ký tự',
+                },
               ]}
             >
               <TextArea
-                disabled={data?.status === EMaintenanceStatus.COMPLETE || data?.status === EMaintenanceStatus.COMPLETED}
+                disabled={
+                  data?.status?.id === ESTATUS.COMPLETE ||
+                  data?.status?.id === ESTATUS.COMPLETED ||
+                  data?.status?.id === ESTATUS.INPROGRESS
+                }
                 // showCount
                 // maxLength={300}
                 placeholder="Nhập nội dung tóm tắt"
@@ -255,7 +339,7 @@ const AddOrUpdateMaintain = ({ isActive, title, data, onCancel, onSuccess }: Add
           <Col span={24}>
             <Form.Item
               label="Nhân viên kỹ thuật :"
-              name="assignedTo"
+              name="staffId"
               required={true}
               rules={[
                 {
@@ -266,9 +350,10 @@ const AddOrUpdateMaintain = ({ isActive, title, data, onCancel, onSuccess }: Add
             >
               <SelectUI
                 disabled={
-                  data?.status === EMaintenanceStatus.COMPLETE ||
-                  data?.status === EMaintenanceStatus.COMPLETED ||
-                  !schoolId
+                  data?.status?.id === ESTATUS.COMPLETE ||
+                  data?.status?.id === ESTATUS.COMPLETED ||
+                  data?.status?.id === ESTATUS.INPROGRESS ||
+                  !form.getFieldValue('schoolId')
                 }
                 showSearch
                 maxTagCount={'responsive'}
@@ -291,7 +376,11 @@ const AddOrUpdateMaintain = ({ isActive, title, data, onCancel, onSuccess }: Add
 
           <Col span={24}>
             <Upload
-              disabled={data?.status === EMaintenanceStatus.COMPLETE || data?.status === EMaintenanceStatus.COMPLETED}
+              disabled={
+                data?.status?.id === ESTATUS.COMPLETE ||
+                data?.status?.id === ESTATUS.COMPLETED ||
+                data?.status?.id === ESTATUS.INPROGRESS
+              }
               accept="image/png, image/jpeg"
               listType="picture-card"
               fileList={fileList}
@@ -304,8 +393,9 @@ const AddOrUpdateMaintain = ({ isActive, title, data, onCancel, onSuccess }: Add
               <Button
                 disabled={
                   fileList?.length >= 10 ||
-                  data?.status === EMaintenanceStatus.COMPLETE ||
-                  data?.status === EMaintenanceStatus.COMPLETED
+                  data?.status?.id === ESTATUS.COMPLETE ||
+                  data?.status?.id === ESTATUS.COMPLETED ||
+                  data?.status?.id === ESTATUS.INPROGRESS
                 }
                 style={{ width: '100%' }}
                 className="btn-upload"
@@ -320,7 +410,11 @@ const AddOrUpdateMaintain = ({ isActive, title, data, onCancel, onSuccess }: Add
         <Row>
           <Col span={24} className="mt-16">
             <Button
-              disabled={data?.status === EMaintenanceStatus.COMPLETE || data?.status === EMaintenanceStatus.COMPLETED}
+              disabled={
+                data?.status?.id === ESTATUS.COMPLETE ||
+                data?.status?.id === ESTATUS.COMPLETED ||
+                data?.status?.id === ESTATUS.INPROGRESS
+              }
               loading={isLoading}
               icon={<SortDescendingIcon />}
               htmlType="submit"

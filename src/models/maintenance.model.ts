@@ -1,52 +1,80 @@
 import { IGetListParamCommon } from './common.model';
 
-export interface IGetListMaintenance extends IGetListParamCommon {
-  status?: string;
-}
-
-export interface IListMaintenance {
-  status: number;
-  message: string;
-  data: Array<IMaintenance[] | any[]>;
-}
-
 export interface IMaintenance {
-  createdAt: string;
-  updatedAt: string;
-  id: string;
-  code: string;
+  id?: string;
+  categoryMaintenanceId: string;
+  accountId: string;
+  staffId?: string;
+  installRecordId: string;
+  schoolId: string;
+  statusId: string;
   title: string;
   reason: string;
-  status: string;
-  createdBy: string;
-  dateAssigned: string | null;
-  cause: string | null;
-  solution: string | null;
-  schoolId: string;
-  assignedTo: null;
-  images: {
-    createdAt: string;
-    updatedAt: string;
-    id: string;
-    url: string;
-    typeMaintenance: string | null;
-    productId: string | null;
-    maintenanceId: string;
-  }[];
-  school: {
-    name: string;
-  };
-  staff: {
-    fullName: string;
-  };
+  repairFees?: number;
+  timeMaintenance?: Date | any;
+  images_request: any[];
+  images_response?: any[];
+  isDelete?: boolean;
+
+  // get list
+  createdAt?: Date | any;
+  updatedAt?: Date | any;
+  categoryMaintenance?: CategoryMaintenance;
+  installRecord?: InstallRecord;
+  school?: School;
+  account?: Account;
+  staff?: Account;
+  status?: CategoryMaintenance;
 }
 
-export interface ICreateMaintenance {
+export interface Account {
+  id: string;
+  fullName: string;
+  avatar: string;
+}
+
+export interface CategoryMaintenance {
+  id: string;
+  name: string;
+}
+
+export interface InstallRecord {
+  id: string;
+  timeInstall: Date;
+  warrantyPeriod: number;
+  product: Product;
+}
+
+export interface Product {
+  id: string;
+  name: string;
+  code: string;
+  price: number;
+  images: string[];
+  discount: number;
+}
+
+export interface School {
+  id: string;
+  name: string;
+  address: string;
+  email: string;
+  phoneNumber: string;
+}
+
+export interface IGetListParamMaintenance extends IGetListParamCommon {
+  categoryMaintenanceId?: string;
+  accountId?: string;
+  installRecordId?: string;
+  staffId?: string;
+  schoolId?: string;
+  statusId?: string;
+  isDelete?: boolean;
+}
+
+export interface IStatusMaintenance {
   id?: string;
-  type: string;
-  title: string;
-  reason: string;
-  schoolId: string;
-  assignedTo: string;
-  images: any[];
+  statusId?: string;
+  staffId?: string;
+  role?: string;
 }

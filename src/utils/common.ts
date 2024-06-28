@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { EMaintenanceConvert, EMaintenanceStatus, ETYPE_ACCOUNT } from '@/constants/enum';
+import { EMAINTENANCE, EMaintenanceConvert, EMaintenanceStatus, ETYPE_ACCOUNT } from '@/constants/enum';
 import { BASE_URL } from '@/constants/urls';
+import { IInstallRecord } from '@/models/install.model';
 import { UploadImagesMultiplieApi } from '@/services/api/common';
 import { Editor } from '@ckeditor/ckeditor5-core';
 import { FileLoader, UploadAdapter } from '@ckeditor/ckeditor5-upload';
@@ -246,12 +247,12 @@ export const handleImageProcessing = async (fileList: any[]): Promise<string[]> 
   /**  check listitem newer */
   const listImagesNewer = await fileList
     ?.filter((item: any) => item?.status !== 'hasExits')
-    ?.map((element: any) => element.originFileObj || element);
+    ?.map((element: any) => element?.originFileObj || element);
 
   const uploadResults = listImagesNewer?.length > 0 ? await UploadImagesMultiplieApi(listImagesNewer) : [];
-
   const imageUrls =
     listImagesNewer?.length > 0 ? uploadResults?.data?.map((item: any) => `common/images/${item?.filename}`) : [];
+
   return [...listImagesOlder, ...imageUrls];
 };
 
@@ -334,4 +335,42 @@ const headerDescriptions: RouteDescription[] = [
 export const getTextHeaderDescription = (pathname: string): string => {
   const match = headerDescriptions.find((route) => route.pattern.test(pathname));
   return match ? match.description : '';
+};
+
+export const handleGetCategoryMaintenance = (data: IInstallRecord[], idSelected: string): string => {
+  const currentRecord = data.find((item) => item.id === idSelected);
+  if (!currentRecord || !currentRecord.timeInstall || !currentRecord.warrantyPeriod) {
+    return 'Chưa xác định';
+  }
+
+  const timeInstall = new Date(currentRecord.timeInstall);
+  const warrantyEndDate = new Date(timeInstall);
+  warrantyEndDate.setMonth(timeInstall.getMonth() + currentRecord.warrantyPeriod);
+
+  const currentDate = new Date();
+
+  if (currentDate <= warrantyEndDate) {
+    return 'Bảo hành';
+  } else {
+    return 'Sửa chữa';
+  }
+};
+
+export const handleGetCategoryMaintenanceId = (data: IInstallRecord[], idSelected: string): string => {
+  const currentRecord = data.find((item) => item.id === idSelected);
+  if (!currentRecord || !currentRecord.timeInstall || !currentRecord.warrantyPeriod) {
+    return 'Không xác định';
+  }
+
+  const timeInstall = new Date(currentRecord.timeInstall);
+  const warrantyEndDate = new Date(timeInstall);
+  warrantyEndDate.setMonth(timeInstall.getMonth() + currentRecord.warrantyPeriod);
+
+  const currentDate = new Date();
+
+  if (currentDate <= warrantyEndDate) {
+    return EMAINTENANCE?.BD;
+  } else {
+    return EMAINTENANCE?.SC;
+  }
 };

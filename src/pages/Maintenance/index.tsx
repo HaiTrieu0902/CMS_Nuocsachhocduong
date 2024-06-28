@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import {
   Breadcrumb,
   Container,
@@ -10,16 +11,14 @@ import {
   SelectUI,
   TooltipCell,
   TooltipParagraph,
-  TrashIcon,
 } from '@/components';
 import { DEFAULT_PAGE_NUMBER, DEFAULT_SIZE_PAGE, STATE_MAINTENANCE_ALL, defaultTableParams } from '@/constants';
-import { EMaintenanceStatus } from '@/constants/enum';
+import { ESTATUS } from '@/constants/enum';
 import useLoading from '@/hooks/useLoading';
 import useModal from '@/hooks/useModal';
 import { TableParams } from '@/models/common.model';
-import { IGetListMaintenance, IListMaintenance, IMaintenance } from '@/models/maintenance.model';
+import { IGetListParamMaintenance, IMaintenance } from '@/models/maintenance.model';
 import { deleteMaintenanceAPI, getListMaintenanceAPI } from '@/services/api/maintenance';
-import { getStatusText } from '@/utils/common';
 import { useModel } from '@umijs/max';
 import { Button, Col, Form, Row, Table, TableColumnsType, Typography, message } from 'antd';
 import { format } from 'date-fns';
@@ -37,20 +36,19 @@ const MaintenanceManagement: React.FC = () => {
     offModal: offEditOrAddMaintainModal,
   } = useModal();
   const { stateModal: confirmState, toggleModal: toggleConfirmModal, offModal: offConfirmModal } = useModal();
-  const [listMaintenance, setListMaintenance] = useState<IListMaintenance>({} as IListMaintenance);
+  const [listMaintenance, setListMaintenance] = useState<IMaintenance[]>([]);
   const [tableParams, setTableParams] = useState<TableParams>({
     pagination: defaultTableParams,
   });
-  const [searchParams, setSearchParams] = useState<IGetListMaintenance>({
-    size: DEFAULT_SIZE_PAGE,
+  const [searchParams, setSearchParams] = useState<IGetListParamMaintenance>({
+    pageSize: DEFAULT_SIZE_PAGE,
     page: DEFAULT_PAGE_NUMBER,
     search: '',
-    status: '',
   });
 
   /** handle tooggle modal add*/
-  const handleToggleModal = () => {
-    toggleEditOrAddMaintainModal(true, 'add', {})();
+  const handleToggleModal = (data: any) => {
+    toggleEditOrAddMaintainModal(true, 'edit', data)();
   };
 
   /** handle change tab*/
@@ -67,17 +65,17 @@ const MaintenanceManagement: React.FC = () => {
   };
 
   /** handle get list maintenance*/
-  const handleGetListMaintenance = async (values: IGetListMaintenance) => {
+  const handleGetListMaintenance = async (values: IGetListParamMaintenance) => {
     await withLoading(async () => {
       try {
         const res = await getListMaintenanceAPI(values);
-        setListMaintenance(res);
+        setListMaintenance(res?.data);
         setTableParams((prevParams) => ({
           ...prevParams,
           pagination: {
             ...prevParams.pagination,
             current: values.page,
-            total: res.data[1],
+            total: res.total,
           },
         }));
       } catch (error: any) {
@@ -88,19 +86,19 @@ const MaintenanceManagement: React.FC = () => {
 
   /** handle submit search*/
   const handleSubmitSearch = (values: any) => {
-    setSearchParams({
-      size: DEFAULT_SIZE_PAGE,
+    setSearchParams((prevParams) => ({
+      ...prevParams,
       page: DEFAULT_PAGE_NUMBER,
       search: values?.search?.trim() || '',
-      status: values?.status || '',
-    });
+      statusId: values?.status || '',
+    }));
   };
 
   /** handleOnSubmitDelete */
   const handleOnSubmitDelete = async (row: IMaintenance) => {
     try {
       if (row?.id) await deleteMaintenanceAPI(row?.id);
-      message.success('Xóa sản phẩm thành công');
+      message.success('Xóa sự cố thành công');
     } catch (error: any) {
       message.error(error?.message);
     }
@@ -116,29 +114,26 @@ const MaintenanceManagement: React.FC = () => {
       },
     },
     {
-      title: 'Mã',
-      key: 'code',
-      width: '20%',
+      title: 'Trường gặp sự cố',
+      width: '15%',
       render: (text, row) => {
-        return <TooltipCell title={row?.code} content={row?.code} />;
+        return <TooltipCell title={row?.school?.name} content={row?.school?.name} />;
       },
     },
     {
       title: 'Thông tin sự cố',
-      key: 'infomation',
-      width: '40%',
+      width: '15%',
       render: (text, row) => {
-        return <TooltipCell className="truncate" title={row?.title} content={row?.title} />;
+        return <TooltipCell title={row?.reason} content={row?.reason} />;
       },
     },
     {
       title: 'Người tạo',
-      key: 'create',
-      width: '20%',
+      width: '15%',
       render: (text, row) => {
         return (
-          <TooltipParagraph placement="topLeft" title={row?.createdBy}>
-            <Typography.Text className="text_cell">{row?.createdBy}</Typography.Text>
+          <TooltipParagraph placement="topLeft" title={row?.account?.fullName}>
+            <Typography.Text className="text_cell">{row?.account?.fullName}</Typography.Text>
             <br />
             <Typography.Text className="text_date">
               {row?.createdAt ? format(new Date(row?.createdAt), 'dd/MM/yyyy HH:mm:ss') : row?.createdAt || 'N/A'}
@@ -147,69 +142,72 @@ const MaintenanceManagement: React.FC = () => {
         );
       },
     },
+
     {
-      title: 'Người xử lý',
-      key: 'handle',
-      width: '20%',
+      title: 'Nhân viên xử lý',
+      width: '15%',
       render: (text, row) => {
         return (
-          <TooltipParagraph placement="topLeft" title={row?.staff?.fullName}>
-            <Typography.Text className="text_cell">{row?.staff?.fullName || 'Chưa có'}</Typography.Text>
+          <TooltipParagraph placement="topLeft" title={row?.staff ? row?.staff?.fullName : 'Chưa tiếp nhận'}>
+            <Typography.Text className="text_cell">
+              {row?.staff ? row?.staff?.fullName : 'Chưa tiếp nhận'}
+            </Typography.Text>
             <br />
             <Typography.Text className="text_date">
-              {row?.dateAssigned
-                ? format(new Date(row?.dateAssigned), 'dd/MM/yyyy HH:mm:ss')
-                : row?.dateAssigned || 'N/A'}
+              Lắp đặt lúc:{' '}
+              {row?.timeMaintenance
+                ? format(new Date(row?.timeMaintenance), 'dd/MM/yyyy HH:mm:ss')
+                : row?.timeMaintenance || 'N/A'}
             </Typography.Text>
           </TooltipParagraph>
         );
       },
     },
+
     {
       title: 'Trạng thái',
-      key: 'status',
-      width: '20%',
+      width: '12%',
       render: (text, row) => {
         return (
-          <Row>
-            <Button
-              className={`${
-                row?.status === EMaintenanceStatus.COMPLETE || row?.status === EMaintenanceStatus.COMPLETED
-                  ? 'btn_type2 btn-primary'
-                  : row?.status === EMaintenanceStatus.PENDING
-                  ? 'btn_type2 btn-error'
-                  : 'btn_type2 btn-add'
-              }`}
-              style={{ width: 122 }}
-            >
-              {getStatusText(row?.status as never)}
-            </Button>
-          </Row>
+          <TooltipCell
+            className={`${
+              row?.status?.id === ESTATUS.DELETED
+                ? 'text_danger'
+                : row?.status?.id === ESTATUS.INPROGRESS
+                ? 'text_inprogress'
+                : row?.status?.id === ESTATUS.COMPLETE || row?.status?.id === ESTATUS.COMPLETED
+                ? 'text_complete'
+                : 'text_pending'
+            }`}
+            title={row?.status?.name}
+            content={row?.status?.name}
+          />
         );
       },
     },
-
     {
       title: 'Thao tác',
       dataIndex: 'action',
+      align: 'center',
       key: 'action',
       width: '10%',
       render: (text: any, row: any) => (
         <Row gutter={[8, 10]} justify={'center'}>
-          {row?.status === EMaintenanceStatus.COMPLETE || row?.status === EMaintenanceStatus.COMPLETED ? (
+          {row?.status?.id === ESTATUS.COMPLETED ? (
             <Col className="pointer" onClick={toggleEditOrAddMaintainModal(true, 'view', row)}>
               <SearchColorBlueIcon />
             </Col>
           ) : (
-            <React.Fragment>
+            <>
               <Col className="pointer" onClick={toggleEditOrAddMaintainModal(true, 'edit', row)}>
                 <PencilIcon />
               </Col>
-              <Col className="pointer" onClick={toggleConfirmModal(true, 'delete', row)}>
-                <TrashIcon />
-              </Col>
-            </React.Fragment>
+            </>
           )}
+
+          {/* <Col className="pointer" onClick={toggleConfirmModal(true, 'delete', row)}>
+            <TrashIcon />
+          </Col> */}
         </Row>
       ),
       ellipsis: {
@@ -225,9 +223,9 @@ const MaintenanceManagement: React.FC = () => {
   useEffect(() => {
     setInitialState((s: any) => ({
       ...s,
-      data: `${listMaintenance?.data ? listMaintenance?.data[1] : ''} SỰ CỐ, BẢO DƯỠNG CHƯA ĐƯỢC XỬ LÝ`,
+      data: `${listMaintenance?.length > 0 ? listMaintenance?.length : ''} SỰ CỐ, BẢO DƯỠNG CHƯA ĐƯỢC XỬ LÝ`,
     }));
-  }, [listMaintenance?.data]);
+  }, [listMaintenance]);
 
   return (
     <Row className="maintain-management_container">
@@ -262,9 +260,9 @@ const MaintenanceManagement: React.FC = () => {
       <Container className="mt-24">
         <Table
           loading={isLoading}
-          dataSource={listMaintenance?.data?.length > 0 ? (listMaintenance?.data[0] as never) : []}
+          dataSource={listMaintenance?.length > 0 ? (listMaintenance as never) : []}
           columns={columns}
-          rowKey={(record) => record.code}
+          rowKey={(record) => record.id as string}
           locale={{ emptyText: 'Chưa có dữ liệu' }}
           scroll={{ y: '60vh' }}
           showSorterTooltip={false}
@@ -286,7 +284,7 @@ const MaintenanceManagement: React.FC = () => {
         onSubmit={handleOnSubmitDelete}
         onSuccess={() =>
           handleGetListMaintenance({
-            size: tableParams?.pagination?.pageSize as number,
+            pageSize: tableParams?.pagination?.pageSize as number,
             page: tableParams?.pagination?.current as number,
           })
         }
