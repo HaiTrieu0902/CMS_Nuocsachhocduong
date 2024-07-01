@@ -50,3 +50,7 @@ export enum EMAINTENANCE {
   BD = '8b746035-46bf-428f-b4db-b84e9b375b5f',
   SC = 'd1e6d70f-bd4a-4acb-99bc-8801dab712cf',
 }
+
+export enum ETOKEN {
+  TOKEN_DEVICES = 'TOKEN_DEVICES',
+}

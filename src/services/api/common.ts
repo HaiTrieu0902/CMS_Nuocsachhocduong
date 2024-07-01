@@ -53,3 +53,11 @@ export const uploadFilesApi = async (files: File[]) => {
     })
     .then((res) => res.data);
 };
+
+export const createDeviceAPI = (params: { accountId: string; token: string; type: string }) => {
+  return client.post('common/create-device', params).then((res: AxiosResponse) => res.data);
+};
+
+export const deleteCategoryProductAPI = (id: string) => {
+  return client.delete(`common/remove-device/${id}`).then((res: AxiosResponse<any>) => res.data);
+};

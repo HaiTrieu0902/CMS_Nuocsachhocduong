@@ -7,6 +7,8 @@ export const DEFAULT_SIZE_PAGE_MAX = 1000;
 
 export const DEFAULT_PAGE_NUMBER = 1;
 
+export const TOKEN_DEVIES = '';
+
 export const TYPES_ACCOUNT = [
   {
     value: '96e3ba98-368c-4509-baf2-9033d2b1a10e',
