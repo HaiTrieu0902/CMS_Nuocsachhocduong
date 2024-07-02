@@ -7,6 +7,17 @@ import routes from './routes';
 const { REACT_APP_ENV = 'dev' } = process.env;
 
 export default defineConfig({
+  define: {
+    REACT_APP_API_KEY: 'AIzaSyA-7nlM2TFCBfs--V2lRr2CXsrYgIyNRYs',
+    REACT_APP_AUTH_DOMAIN: 'nuocsachhocduong-977b6.firebaseapp.com',
+    REACT_APP_PROJECT_ID: 'nuocsachhocduong-977b6',
+    REACT_APP_STORAGE_BUCKET: 'nuocsachhocduong-977b6.appspot.com',
+    REACT_APP_MESSAGING_SENDER_ID: '19688520247',
+    REACT_APP_APP_ID: '1:19688520247:web:74438eb6d8e17c7b5d9db2',
+    REACT_APP_MEASUREMENT_ID: 'G-B1RN8ZXYGM',
+
+    REACT_APP_V_API: 'BKz-E3NZap64pyDC-iGtWKH-xvZuyxBvs0I_H00BwC4N-2003WvBASO7XTXBeEnhDn0_LKPFYVg4UN69IUC54cs',
+  },
   /**
    * @name 开启 hash 模式
    * @description 让 build 之后的产物包含 hash 后缀。通常用于增量发布和避免浏览器加载缓存。
@@ -69,6 +80,7 @@ export default defineConfig({
   /**
    * @name 快速热更新配置
    * @description 一个不错的热更新组件，更新时可以保留 state
+   * @  fastRefresh: true,
    */
   fastRefresh: true,
   //============== 以下都是max的插件配置 ===============

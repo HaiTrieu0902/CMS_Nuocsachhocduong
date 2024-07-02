@@ -6,7 +6,7 @@ import { messaging } from './firebase';
 async function requestUserPermission() {
   try {
     const currentToken = await getToken(messaging, {
-      vapidKey: 'BKz-E3NZap64pyDC-iGtWKH-xvZuyxBvs0I_H00BwC4N-2003WvBASO7XTXBeEnhDn0_LKPFYVg4UN69IUC54cs',
+      vapidKey: REACT_APP_V_API,
     });
     if (currentToken) {
       console.log('📢 [fcmService.ts:11]', currentToken);
