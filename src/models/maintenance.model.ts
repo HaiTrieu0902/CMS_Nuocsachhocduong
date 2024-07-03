@@ -3,7 +3,7 @@ import { IGetListParamCommon } from './common.model';
 export interface IMaintenance {
   id?: string;
   categoryMaintenanceId: string;
-  accountId: string;
+  accountId?: string;
   staffId?: string;
   installRecordId: string;
   schoolId: string;

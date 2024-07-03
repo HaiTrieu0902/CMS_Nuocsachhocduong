@@ -103,11 +103,11 @@ const AddOrUpdateMaintain = ({ isActive, title, data, onCancel, onSuccess }: Add
         try {
           const imageUrls = await handleImageProcessing(fileList);
           const params = {
-            categoryMaintenanceId: handleGetCategoryMaintenanceId(
+            categoryMaintenanceId: await handleGetCategoryMaintenanceId(
               listInstallRecord,
               form?.getFieldValue('installRecordId'),
             ),
-            accountId: authUser?.id || '68821b5d-176c-4e2d-a0ca-2cd7d0641d47',
+
             installRecordId: values?.installRecordId,
             schoolId: values?.schoolId,
             staffId: values?.staffId,
@@ -116,14 +116,20 @@ const AddOrUpdateMaintain = ({ isActive, title, data, onCancel, onSuccess }: Add
             reason: values?.reason,
             images_request: imageUrls,
           };
+
+          console.log('params', params);
+          console.log('dsadas', form?.getFieldValue('installRecordId'));
+
           if (data?.id) {
             await updateMaintenanceAPI({
               ...params,
               id: data?.id,
+              accountId: authUser?.id || '68821b5d-176c-4e2d-a0ca-2cd7d0641d47',
             });
           } else {
             await createMaintenanceAPI({ ...params });
           }
+
           onSuccess();
           message.success(`${data?.id ? 'Sửa sự cố thành công' : 'Tạo sự cố thành công'}`);
           handleCancelModal();
@@ -132,8 +138,10 @@ const AddOrUpdateMaintain = ({ isActive, title, data, onCancel, onSuccess }: Add
         }
       });
     },
-    [form?.getFieldValue('installRecordId'), fileList],
+    [form?.getFieldValue('installRecordId'), fileList, listInstallRecord],
   );
+
+  console.log('data', data);
 
   /* Changed file list */
   const onChangeFileList: UploadProps['onChange'] = ({ fileList: newFileList }) => {
@@ -157,7 +165,8 @@ const AddOrUpdateMaintain = ({ isActive, title, data, onCancel, onSuccess }: Add
   /** Set Initial Form */
   useEffect(() => {
     if (data?.id && isActive) {
-      const { school, installRecord, title, reason, staff, images_request, images_response, id } = data;
+      const { school, installRecord, title, reason, staff, images_request, images_response, id, categoryMaintenance } =
+        data;
       const initialForm = {
         schoolId: school?.id,
         installRecordId: installRecord?.id,

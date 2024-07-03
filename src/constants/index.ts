@@ -62,7 +62,7 @@ export const STATE_MAINTENANCE_ALL = [
 export const TYPE_PROBLEM = [
   {
     value: 'SC',
-    label: 'Sửa  chữa',
+    label: 'Sửa chữa',
   },
   {
     value: 'BD',
