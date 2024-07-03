@@ -16,6 +16,7 @@ import {
   ListIcon,
   NewsActiveIcon,
   NewsInactiveIcon,
+  Notification,
   NotificationActiveIcon,
   NotificationInactiveIcon,
   ProductActiveIcon,
@@ -116,6 +117,9 @@ export const layout: RunTimeLayoutConfig = ({ initialState, setInitialState }) =
           <Provider store={store}>
             <PersistGate loading={null} persistor={persistor}>
               <Provider store={store}>
+                <Row style={{ alignContent: 'center', marginRight: 4 }}>
+                  <Notification />
+                </Row>
                 <AvatarDropdown>
                   <div className="header-avatar__container">
                     {avatarChildren}

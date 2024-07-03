@@ -1,15 +1,31 @@
+import { IGetListParamCommon } from './common.model';
+
 export interface INotification {
   id?: string;
   title: string;
-  timeSend: string | any;
-  content: string;
-  schoolIds: any[];
+  isRead: boolean;
+  isReadAdmin: boolean;
+  type: string;
+  data?: {
+    time: string;
+    title: string;
+  };
+  createdAt?: string;
+  updatedAt?: string;
+  account?: {
+    id: string;
+    fullName: string;
+    avatar: string;
+  };
+  receiver?: {
+    id: string;
+    fullName: string;
+  };
 }
 
-export interface INotificationList {
-  status: number;
-  message: string;
-  data: Array<IDataNotification[] | number>;
+export interface IGetListParamNotification extends IGetListParamCommon {
+  receiverId?: string;
+  accountId?: string;
 }
 
 export interface IDataNotification {

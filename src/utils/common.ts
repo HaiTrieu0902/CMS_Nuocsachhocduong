@@ -374,3 +374,17 @@ export const handleGetCategoryMaintenanceId = (data: IInstallRecord[], idSelecte
     return EMAINTENANCE?.SC;
   }
 };
+
+export const convertDate = (date: any) => {
+  const options: any = { hour: '2-digit', minute: '2-digit', hour12: true };
+  const res = date.toLocaleTimeString('en-US', options);
+  return res;
+};
+
+export const renderContentClearSpecialCharacter = (content: any) => {
+  const regex = /{{(.*?)}}/g;
+  const text = content.replace(regex, (match: any, group: any) => {
+    return group;
+  });
+  return text;
+};

@@ -4,9 +4,9 @@ import {
   Container,
   DatePickerUI,
   InputUI,
-  PencilIcon,
   PlusIcon,
   PopupConfirm,
+  SearchColorBlueIcon,
   SearchIcon,
   TooltipCell,
   TrashIcon,
@@ -14,12 +14,13 @@ import {
 import { DEFAULT_PAGE_NUMBER, DEFAULT_SIZE_PAGE, defaultTableParams } from '@/constants';
 import useLoading from '@/hooks/useLoading';
 import useModal from '@/hooks/useModal';
-import { IGetListParamCommon, TableParams } from '@/models/common.model';
-import { IDataNotification, INotification, INotificationList } from '@/models/notification.model';
+import { TableParams } from '@/models/common.model';
+import { IGetListParamNotification, INotification } from '@/models/notification.model';
 import { deleteNotificationAPI, getListNotificationAPI } from '@/services/api/notification';
 import { history } from '@umijs/max';
-import { Button, Col, Form, Row, Table, TableColumnsType, Typography, message } from 'antd';
+import { Button, Col, Form, Row, Table, TableColumnsType, message } from 'antd';
 import { DatePickerProps } from 'antd/lib';
+import { format } from 'date-fns';
 import dayjs from 'dayjs';
 import React, { useEffect, useState } from 'react';
 import './Notification.scss';
@@ -30,16 +31,15 @@ const NotificationManagement: React.FC = () => {
   const { isLoading, withLoading } = useLoading();
   const tempStartMonth = dayjs().month(currentDate.month()).date(currentDate.date());
   const [startMonth, setStartMonth] = useState<dayjs.Dayjs>(tempStartMonth);
-  const [listNotification, setListNotification] = useState<INotificationList[]>();
+  const [listNotification, setListNotification] = useState<INotification[]>([]);
   const [tableParams, setTableParams] = useState<TableParams>({
     pagination: defaultTableParams,
   });
-  const [searchParams, setSearchParams] = useState<IGetListParamCommon>({
-    size: DEFAULT_SIZE_PAGE,
+  const [searchParams, setSearchParams] = useState<IGetListParamNotification>({
+    pageSize: DEFAULT_SIZE_PAGE,
     page: DEFAULT_PAGE_NUMBER,
     search: '',
   });
-
   const { stateModal: confirmState, toggleModal: toggleConfirmModal, offModal: offConfirmModal } = useModal();
 
   /** handle Table Change */
@@ -56,17 +56,17 @@ const NotificationManagement: React.FC = () => {
   };
 
   /** handle get list product */
-  const handleGetListNotification = async (values: IGetListParamCommon) => {
+  const handleGetListNotification = async (values: IGetListParamNotification) => {
     await withLoading(async () => {
       try {
         const res = await getListNotificationAPI({ ...values });
-        setListNotification(res?.data[0]);
+        setListNotification(res?.data);
         setTableParams({
           ...tableParams,
           pagination: {
             ...tableParams.pagination,
             current: values.page,
-            total: res.data[1],
+            total: res.total,
           },
         });
       } catch (error: any) {
@@ -96,14 +96,14 @@ const NotificationManagement: React.FC = () => {
   /** handle submit */
   const handleSubmit = async (values: any) => {
     setSearchParams({
-      size: DEFAULT_SIZE_PAGE,
+      pageSize: DEFAULT_SIZE_PAGE,
       page: DEFAULT_PAGE_NUMBER,
       search: values?.search?.trim() || '',
     });
   };
 
   /** config data */
-  const columns: TableColumnsType<IDataNotification> = [
+  const columns: TableColumnsType<INotification> = [
     {
       title: 'STT',
       dataIndex: 'stt',
@@ -118,35 +118,23 @@ const NotificationManagement: React.FC = () => {
       dataIndex: 'title',
       width: '20%',
       render: (text, row) => {
-        return <TooltipCell title={row?.title} content={row?.title} />;
+        return <TooltipCell title={row?.data?.title} content={row?.data?.title} />;
       },
     },
     {
       title: 'Ngày gửi thông báo ',
       dataIndex: 'date',
-
       width: '20%',
       render: (text, row) => {
-        return <TooltipCell title={row?.timeSend} isDate content={row?.timeSend} />;
-      },
-    },
-    {
-      title: 'Trường học nhận thông báo',
-      dataIndex: 'notification',
-      width: '42%',
-      render: (text, row) => {
         return (
-          <Row>
-            {row?.schools?.map((item) => {
-              return (
-                <Col key={item?.id} span={24}>
-                  <Typography.Text key={item?.id} className="text_cell">
-                    {item?.name || ''}
-                  </Typography.Text>
-                </Col>
-              );
-            })}
-          </Row>
+          <TooltipCell
+            title={
+              row?.data?.time ? format(new Date(row?.data?.time), 'dd/MM/yyyy HH:mm:ss') : row?.data?.time || 'N/A'
+            }
+            content={
+              row?.data?.time ? format(new Date(row?.data?.time), 'dd/MM/yyyy HH:mm:ss') : row?.data?.time || 'N/A'
+            }
+          />
         );
       },
     },
@@ -154,29 +142,18 @@ const NotificationManagement: React.FC = () => {
       title: 'Thao tác',
       dataIndex: 'action',
       key: 'action',
+      align: 'center',
       width: '10%',
       render: (text, row) => {
-        const currentDate = dayjs();
-        const timeSend = dayjs(row?.timeSend);
-        const isBeforeCurrentDate = timeSend.isBefore(currentDate, 'day');
         return (
           <Row gutter={[8, 10]} justify={'center'}>
-            <Col
-              className={` ${isBeforeCurrentDate ? 'disabled' : 'pointer'}`}
-              onClick={() => {
-                if (!isBeforeCurrentDate) {
-                  history.push(`/notification/${row?.id}`, row);
-                }
-              }}
-            >
-              <PencilIcon />
+            <Col className={`pointer`}>
+              <SearchColorBlueIcon />
             </Col>
             <Col
-              className={` ${isBeforeCurrentDate ? 'disabled' : 'pointer'}`}
+              className={`pointer`}
               onClick={() => {
-                if (!isBeforeCurrentDate) {
-                  toggleConfirmModal(true, 'delete', row)();
-                }
+                toggleConfirmModal(true, 'delete', row)();
               }}
             >
               <TrashIcon />
@@ -250,7 +227,7 @@ const NotificationManagement: React.FC = () => {
         onSubmit={handleOnSubmitDelete}
         onSuccess={() =>
           handleGetListNotification({
-            size: tableParams?.pagination?.pageSize as number,
+            pageSize: tableParams?.pagination?.pageSize as number,
             page: tableParams?.pagination?.current as number,
           })
         }

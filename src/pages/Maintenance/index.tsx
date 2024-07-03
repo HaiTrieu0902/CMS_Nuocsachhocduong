@@ -223,7 +223,11 @@ const MaintenanceManagement: React.FC = () => {
   useEffect(() => {
     setInitialState((s: any) => ({
       ...s,
-      data: `${listMaintenance?.length > 0 ? listMaintenance?.length : ''} SỰ CỐ, BẢO DƯỠNG CHƯA ĐƯỢC XỬ LÝ`,
+      data: `${
+        listMaintenance?.length > 0
+          ? listMaintenance?.filter((item) => item?.status?.id === ESTATUS?.PENDING)?.length
+          : ''
+      } SỰ CỐ, BẢO DƯỠNG CHƯA ĐƯỢC XỬ LÝ`,
     }));
   }, [listMaintenance]);
 

@@ -10,6 +10,7 @@ import Container from './Container';
 import { DatePickerUI } from './DatePicker';
 import Footer from './Footer';
 import { InputUI } from './Input';
+import Notification from './Notification';
 import PopupConfirm from './PopupConfirm';
 import RichTextEditor from './RichTextEditor/index';
 import { Question, SelectLang } from './RightContent';
@@ -17,7 +18,6 @@ import { AvatarDropdown, AvatarName } from './RightContent/AvatarDropdown';
 import { SelectUI } from './Select';
 import TooltipCell from './TooltipCell';
 import TooltipParagraph from './TooltipParagraph';
-
 export {
   AvatarDropdown,
   AvatarName,
@@ -26,6 +26,7 @@ export {
   DatePickerUI,
   Footer,
   InputUI,
+  Notification,
   PopupConfirm,
   Question,
   RichTextEditor,

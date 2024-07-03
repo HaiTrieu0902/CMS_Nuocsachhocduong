@@ -26,6 +26,13 @@ function setupOnMessageListener() {
   });
 }
 
+export const onMessageListener = () =>
+  new Promise((resolve) => {
+    onMessage(messaging, (payload) => {
+      resolve(payload);
+    });
+  });
+
 // Initial setup
 export function initializeFCM() {
   requestUserPermission();

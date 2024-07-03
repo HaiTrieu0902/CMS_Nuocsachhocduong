@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { Breadcrumb, Container, DatePickerUI, InputUI, SelectUI, TelegramLogoIcon } from '@/components';
 import { DEFAULT_PAGE_NUMBER, DEFAULT_SIZE_PAGE_MAX } from '@/constants';
-import { Ischool } from '@/models/school.model';
-import { createNotificationAPI, getDetailNotificationAPI, updateNotificationAPI } from '@/services/api/notification';
+
+import { ISchool } from '@/models/school.model';
 import { getListSchoolAPI } from '@/services/api/school';
 import { history, useParams } from '@umijs/max';
 import { Button, Col, Form, Input, Row, TimePicker, message } from 'antd';
@@ -17,7 +17,7 @@ const format = 'HH:mm';
 const AddOrUpdateNotification = () => {
   const { id } = useParams<{ id: string }>();
   const [form] = Form.useForm();
-  const [listSchool, setListSchool] = useState<Ischool[]>([]);
+  const [listSchool, setListSchool] = useState<ISchool[]>([]);
   const [selectedSchools, setSelectedSchools] = useState<string[]>([]);
   const [selectedDate, setSelectedDate] = useState<dayjs.Dayjs | null>(null);
 
@@ -37,13 +37,13 @@ const AddOrUpdateNotification = () => {
             content: formItems?.content,
             schoolIds: formItems?.schoolIds,
           };
-          if (id) {
-            await updateNotificationAPI({ ...params, id: id });
-            message.success('Cập nhật thông báo thành công');
-          } else {
-            await createNotificationAPI(params);
-            message.success('Tạo thông báo thành công');
-          }
+          // if (id) {
+          //   await updateNotificationAPI({ ...params, id: id });
+          //   message.success('Cập nhật thông báo thành công');
+          // } else {
+          //   await createNotificationAPI(params);
+          //   message.success('Tạo thông báo thành công');
+          // }
           history.push('/notification');
         }
       } catch (error: any) {
@@ -102,31 +102,31 @@ const AddOrUpdateNotification = () => {
   };
 
   /** Use Effect */
-  useEffect(() => {
-    if (id) {
-      const handleGetNotificationtail = async () => {
-        try {
-          const res = await getDetailNotificationAPI(id);
-          const setInitialForm = {
-            title: res?.data?.title,
-            content: res?.data?.content,
-            schoolIds: res?.data?.schools?.map((item: any) => item?.id),
-            date: dayjs(res?.data?.timeSend),
-            time: dayjs(res?.data?.timeSend),
-          };
-          form?.setFieldsValue(setInitialForm);
-        } catch (error: any) {
-          message.error(error?.message);
-        }
-      };
-      handleGetNotificationtail();
-    }
-  }, [id]);
+  // useEffect(() => {
+  //   if (id) {
+  //     const handleGetNotificationtail = async () => {
+  //       try {
+  //         const res = await getDetailNotificationAPI(id);
+  //         const setInitialForm = {
+  //           title: res?.data?.title,
+  //           content: res?.data?.content,
+  //           schoolIds: res?.data?.schools?.map((item: any) => item?.id),
+  //           date: dayjs(res?.data?.timeSend),
+  //           time: dayjs(res?.data?.timeSend),
+  //         };
+  //         form?.setFieldsValue(setInitialForm);
+  //       } catch (error: any) {
+  //         message.error(error?.message);
+  //       }
+  //     };
+  //     handleGetNotificationtail();
+  //   }
+  // }, [id]);
 
   useEffect(() => {
     const handleGetListSchool = async () => {
       try {
-        const res = await getListSchoolAPI({ size: DEFAULT_SIZE_PAGE_MAX, page: DEFAULT_PAGE_NUMBER });
+        const res = await getListSchoolAPI({ pageSize: DEFAULT_SIZE_PAGE_MAX, page: DEFAULT_PAGE_NUMBER });
         setListSchool(res?.data[0]);
       } catch (error: any) {
         message.error(error?.message);
