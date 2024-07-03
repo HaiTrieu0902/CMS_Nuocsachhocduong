@@ -153,7 +153,31 @@ const AddOrUpdateNews = () => {
           onFinish={handleSubmit}
         >
           <Row gutter={[{ xs: 8, sm: 16, md: 36, lg: 120, xxl: 10 }, 16]}>
-            <Col xxl={{ span: 5 }} lg={{ span: 5 }} sm={{ span: 8 }}>
+            <Col xxl={{ span: 16 }} lg={{ span: 16 }} sm={{ span: 12 }}>
+              <div>
+                <Form.Item
+                  label="Tiêu đề tin tức:"
+                  name="title"
+                  required={true}
+                  rules={[
+                    {
+                      required: true,
+                      message: 'Tiêu đề tin tức không được để trống',
+                    },
+                  ]}
+                >
+                  <InputUI placeholder="Tiêu đề tin tức" />
+                </Form.Item>
+              </div>
+              <div>
+                <Form.Item name="type" valuePropName="checked" required={false}>
+                  <Checkbox>
+                    <Typography.Text>Tin tức nổi bật</Typography.Text>
+                  </Checkbox>
+                </Form.Item>
+              </div>
+            </Col>
+            <Col xxl={{ span: 8 }} lg={{ span: 8 }} sm={{ span: 8 }}>
               <Form.Item
                 name="thumbnail"
                 required={false}
@@ -191,30 +215,6 @@ const AddOrUpdateNews = () => {
                   </Upload>
                 </ImgCrop>
               </Form.Item>
-            </Col>
-            <Col xxl={{ span: 19 }} lg={{ span: 19 }} sm={{ span: 12 }}>
-              <div>
-                <Form.Item
-                  label="Tiêu đề tin tức:"
-                  name="title"
-                  required={true}
-                  rules={[
-                    {
-                      required: true,
-                      message: 'Tiêu đề tin tức không được để trống',
-                    },
-                  ]}
-                >
-                  <InputUI placeholder="Tiêu đề tin tức" />
-                </Form.Item>
-              </div>
-              <div>
-                <Form.Item name="type" valuePropName="checked" required={false}>
-                  <Checkbox>
-                    <Typography.Text>Tin tức nổi bật</Typography.Text>
-                  </Checkbox>
-                </Form.Item>
-              </div>
             </Col>
           </Row>
           <div>
