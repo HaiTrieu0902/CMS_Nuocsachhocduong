@@ -329,7 +329,7 @@ const headerDescriptions: RouteDescription[] = [
   { pattern: /^\/school\/invest$/, description: 'TRƯỜNG HỌC' },
   { pattern: /^\/school\/agreements\/[^/]+$/, description: 'TRƯỜNG HỌC' }, // id
 
-  { pattern: /^\/install$/, description: 'HỒ SƠ SỰ CỐ' },
+  { pattern: /^\/install$/, description: 'HỒ SƠ LẮP ĐẶT' },
 ];
 
 export const getTextHeaderDescription = (pathname: string): string => {

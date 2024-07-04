@@ -11,7 +11,7 @@ import {
   TooltipCell,
   TrashIcon,
 } from '@/components';
-import { DEFAULT_PAGE_NUMBER, DEFAULT_SIZE_PAGE, defaultTableParams } from '@/constants';
+import { DEFAULT_PAGE_NUMBER, DEFAULT_SIZE_PAGE, authUser, defaultTableParams } from '@/constants';
 import useLoading from '@/hooks/useLoading';
 import useModal from '@/hooks/useModal';
 import { TableParams } from '@/models/common.model';
@@ -39,6 +39,7 @@ const NotificationManagement: React.FC = () => {
     pageSize: DEFAULT_SIZE_PAGE,
     page: DEFAULT_PAGE_NUMBER,
     search: '',
+    receiverId: authUser?.id || '',
   });
   const { stateModal: confirmState, toggleModal: toggleConfirmModal, offModal: offConfirmModal } = useModal();
 

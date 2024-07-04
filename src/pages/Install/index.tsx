@@ -186,13 +186,13 @@ const InstallManagement: React.FC = () => {
 
   return (
     <Row className="contract-management_container">
-      <Breadcrumb title="Hồ sơ sự cố" />
+      <Breadcrumb title="Hồ sơ lắp đặt" />
       <Container>
         <Form form={form} layout="vertical" className="contract-management_form" onFinish={handleSubmit}>
           <Row gutter={[10, 0]}>
             <Col span={6}>
               <Form.Item label="Từ khóa tìm kiếm" name="title" required={false}>
-                <InputUI placeholder="Mã hoặc tên hồ sơ sự cố" />
+                <InputUI placeholder="Mã hoặc tên Hồ sơ lắp đặt" />
               </Form.Item>
             </Col>
             <Col span={18}></Col>

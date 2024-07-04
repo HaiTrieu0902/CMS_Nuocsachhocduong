@@ -116,20 +116,17 @@ const AddOrUpdateMaintain = ({ isActive, title, data, onCancel, onSuccess }: Add
             reason: values?.reason,
             images_request: imageUrls,
           };
-
-          console.log('params', params);
-          console.log('dsadas', form?.getFieldValue('installRecordId'));
-
           if (data?.id) {
             await updateMaintenanceAPI({
               ...params,
               id: data?.id,
-              accountId: authUser?.id || '68821b5d-176c-4e2d-a0ca-2cd7d0641d47',
             });
           } else {
-            await createMaintenanceAPI({ ...params });
+            await createMaintenanceAPI({
+              ...params,
+              accountId: authUser?.id || '68821b5d-176c-4e2d-a0ca-2cd7d0641d47',
+            });
           }
-
           onSuccess();
           message.success(`${data?.id ? 'Sửa sự cố thành công' : 'Tạo sự cố thành công'}`);
           handleCancelModal();
@@ -199,7 +196,11 @@ const AddOrUpdateMaintain = ({ isActive, title, data, onCancel, onSuccess }: Add
       destroyOnClose={true}
       closeIcon={<XCircleIcon />}
       centered
-      title={<Typography.Title className="title-header_modal">Tạo sự cố / Bảo dưỡng</Typography.Title>}
+      title={
+        <Typography.Title className="title-header_modal">
+          {data?.id ? 'Cập nhật sự cố / Bảo dưỡng' : 'Tạo sự cố / Bảo dưỡng'}
+        </Typography.Title>
+      }
       open={isActive}
       onCancel={handleCancelModal}
       className="modal-maintain-management__container"

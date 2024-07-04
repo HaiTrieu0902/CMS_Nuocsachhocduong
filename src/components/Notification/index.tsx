@@ -151,13 +151,6 @@ const Notification = () => {
 
   const groupedNotifications = groupNotificationsByDate(listNotification);
   /* handle convert switch value content */
-  const renderContentWithBold = (content: any) => {
-    const regex = /{{(.*?)}}/g;
-    const boldContent = content.replace(regex, (match: any, group: any) => {
-      return `<span class="user_title_name">${group}</span>`;
-    });
-    return <span dangerouslySetInnerHTML={{ __html: boldContent }} />;
-  };
 
   useEffect(() => {
     getListNotification(1);
@@ -209,7 +202,7 @@ const Notification = () => {
                           gutter={[12, 12]}
                         >
                           <Col span={23}>
-                            <span>{renderContentWithBold(item?.data?.title)}</span>{' '}
+                            <span>{item?.data?.title}</span>{' '}
                             <span className="d-block">
                               {item?.createdAt ? format(new Date(item?.createdAt), 'dd/MM/yyyy') : 'N/A'}
                               {' - '}

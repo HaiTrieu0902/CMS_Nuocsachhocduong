@@ -4,7 +4,6 @@ import {
   Container,
   CurrencyDollarIcon,
   InputUI,
-  ListSmallIcon,
   PencilIcon,
   PlusIcon,
   PopupConfirm,
@@ -173,12 +172,6 @@ const SchoolManagement: React.FC = () => {
             // }}
           >
             <CurrencyDollarIcon />
-          </Col>
-          <Col
-            className="pointer"
-            // onClick={() => handleNavigate('invest')}
-          >
-            <ListSmallIcon />
           </Col>
         </Row>
       ),
