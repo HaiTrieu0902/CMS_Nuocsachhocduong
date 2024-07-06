@@ -114,6 +114,13 @@ const MaintenanceManagement: React.FC = () => {
       },
     },
     {
+      title: 'Loại sự cố',
+      width: '10%',
+      render: (text, row) => {
+        return <TooltipCell title={row?.categoryMaintenance?.name} content={row?.categoryMaintenance?.name} />;
+      },
+    },
+    {
       title: 'Trường gặp sự cố',
       width: '15%',
       render: (text, row) => {

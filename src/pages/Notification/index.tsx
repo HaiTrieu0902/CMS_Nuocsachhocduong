@@ -201,7 +201,11 @@ const NotificationManagement: React.FC = () => {
               </Button>
             </Col>
             <Col span={4}>
-              <Button icon={<PlusIcon />} onClick={handleNavigator} className="btn btn-add">
+              <Button
+                icon={<PlusIcon />}
+                // onClick={handleNavigator}
+                className="btn btn-add"
+              >
                 Thêm thông báo
               </Button>
             </Col>

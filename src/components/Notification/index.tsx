@@ -74,6 +74,7 @@ const Notification = () => {
             time: new Date(),
             title: payload?.data?.title,
           },
+          createdAt: payload?.data?.time || new Date(),
         },
         ...prev,
       ]);
