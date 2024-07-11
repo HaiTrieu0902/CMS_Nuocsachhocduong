@@ -1,9 +1,11 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import employeeLogo from '@/assets/img/employee_logo.png';
 import revenueLogo from '@/assets/img/revenue_logo.png';
 import schoolLogo from '@/assets/img/school_logo.png';
 import { Breadcrumb, Container, SelectUI } from '@/components';
 import useLoading from '@/hooks/useLoading';
-import { IOverallData, getOverallDataAPI } from '@/services/api/dashboard';
+import { IRevenueList } from '@/models/revenue.model';
+import { getListRevenueAPI } from '@/services/api/revenue';
 import { Card, Flex, Row, Spin, Typography } from 'antd';
 import React, { useEffect, useState } from 'react';
 import Chart from './Chart';
@@ -12,19 +14,23 @@ import { formatVietnameseCurrency, generateNextTenYears } from './utils';
 
 const DashboardManagement: React.FC = () => {
   const [currentYear, setCurrentYear] = useState<number>(new Date().getFullYear());
-  const [overallData, setOverallData] = useState<IOverallData>({
-    dataChart: [],
+  const [overallData, setOverallData] = useState<IRevenueList>({
+    dataChartInstall: [],
+    dataChartMaintenance: [],
     schools: 0,
     staffs: 0,
-    totalAmount: 0,
+    installRecords: 0,
+    maintenances: 0,
+    totalInstallRecord: 0,
+    totalMaitenance: 0,
   });
 
   const { isLoading, withLoading } = useLoading();
 
-  const fetchDataRevenue = (year: number) => {
+  const fetchDataRevenue = (year: number | string) => {
     withLoading(async () => {
-      const response = await getOverallDataAPI(year.toString());
-      setOverallData(response);
+      const response = await getListRevenueAPI({ year });
+      setOverallData(response?.data);
     });
   };
 
@@ -60,7 +66,7 @@ const DashboardManagement: React.FC = () => {
               <Row className="info-card">
                 <Row className="info-card-text">
                   <Typography>Tổng doanh thu năm {currentYear} (VNĐ)</Typography>
-                  <Typography>{formatVietnameseCurrency(overallData.totalAmount)}</Typography>
+                  <Typography>{formatVietnameseCurrency(overallData.totalInstallRecord)}</Typography>
                 </Row>
                 <img src={revenueLogo} alt="revenue-icon" />
               </Row>
@@ -80,13 +86,11 @@ const DashboardManagement: React.FC = () => {
               onChange={(y) => setCurrentYear(y)}
             />
           </Row>
-          {overallData.dataChart.length ? (
-            <Chart dataChart={overallData.dataChart} />
+          {overallData.dataChartInstall.length ? (
+            <Chart dataChart={overallData.dataChartInstall} />
           ) : (
             <Flex justify="center">
-              <Typography.Paragraph>
-                Không có dữ liệu doanh thu của năm {currentYear}
-              </Typography.Paragraph>
+              <Typography.Paragraph>Không có dữ liệu doanh thu của năm {currentYear}</Typography.Paragraph>
             </Flex>
           )}
         </Spin>
