@@ -7,12 +7,14 @@ import useModal from '@/hooks/useModal';
 import { TableParams } from '@/models/common.model';
 import { IGetListParamInstall, IInstallRecord } from '@/models/install.model';
 import { getListInstallAPI } from '@/services/api/install';
+import { convertDate } from '@/utils/common';
 import { Button, Col, Form, Row, Table, TableColumnsType, Typography, message } from 'antd';
 import { format } from 'date-fns';
 import React, { useEffect, useState } from 'react';
+import XLSX from 'xlsx-js-style';
+import { alternateRowStyle, headerStyle, rowStyle } from '../Dashboard/utils';
 import AddOrUpdateInstall from './AddOrUpdateInstall';
 import './Install.scss';
-
 const InstallManagement: React.FC = () => {
   const [form] = Form.useForm();
   const { isLoading, withLoading } = useLoading();
@@ -179,6 +181,112 @@ const InstallManagement: React.FC = () => {
     },
   ];
 
+  const generateXLSXFile = async (data: IInstallRecord[], filename: string) => {
+    try {
+      const rows = data?.map((item) => ({
+        school: item?.school?.name,
+        product: item?.product?.name,
+        quantity: item?.quantity,
+        totalAmount: item?.totalAmount,
+        createdBy: item?.account?.fullName,
+        timeCreated: `${convertDate(new Date(new Date(item?.createdAt)))} - ${
+          item?.createdAt ? format(new Date(item?.createdAt), 'dd/MM/yyyy') : 'N/A'
+        }`,
+        staff: item?.staff?.fullName,
+        timeInstall: `${convertDate(new Date(new Date(item?.timeInstall)))} - ${
+          item?.timeInstall ? format(new Date(item?.timeInstall), 'dd/MM/yyyy') : 'N/A'
+        }`,
+        warrantyPeriod: item?.warrantyPeriod,
+        status: item?.status?.name,
+      }));
+      const worksheet = XLSX.utils.json_to_sheet(rows);
+      const workbook = XLSX.utils.book_new();
+
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Hồ sơ lắp đặt');
+      XLSX.utils.sheet_add_aoa(
+        worksheet,
+        [
+          [
+            'Trường lắp đặt',
+            'Thiết bị',
+            'Số lượng lắp',
+            'Tổng tiền lắp đặt',
+            'Người tạo hồ sơ',
+            'Thời gian tạo',
+            'Nhân viên lắp đặt',
+            'Thời gian lắp đặt',
+            'Thời gian bảo hành',
+            'Trạng thái',
+          ],
+        ],
+        { origin: 'A1' },
+      );
+
+      const max_width = {
+        school: rows.reduce((w: any, r: any) => Math.max(w, r?.school && r.school?.toString().length), 16),
+        product: rows.reduce((w: any, r: any) => Math.max(w, r?.product && r.product?.toString().length), 16),
+        quantity: rows.reduce((w: any, r: any) => Math.max(w, r?.quantity && r.quantity.toString().length), 16),
+        totalAmount: rows.reduce((w: any, r: any) => Math.max(w, r?.totalAmount && r.totalAmount.toString().length), 8),
+        createdBy: rows.reduce((w: any, r: any) => Math.max(w, r?.createdBy && r.createdBy.toString().length), 10),
+        timeCreated: rows.reduce(
+          (w: any, r: any) => Math.max(w, r?.timeCreated && r.timeCreated?.toString().length),
+          10,
+        ),
+        staff: rows.reduce((w: any, r: any) => Math.max(w, r?.staff && r.staff?.toString().length), 16),
+        timeInstall: rows.reduce(
+          (w: any, r: any) => Math.max(w, r?.timeInstall && r.timeInstall?.toString().length),
+          8,
+        ),
+        warrantyPeriod: rows.reduce(
+          (w: any, r: any) => Math.max(w, r?.warrantyPeriod && r.warrantyPeriod?.toString().length),
+          8,
+        ),
+        status: rows.reduce((w: any, r: any) => Math.max(w, r?.status && r.status.length), 10),
+      };
+      worksheet['!cols'] = [
+        { wch: max_width.school },
+        { wch: max_width.product },
+        { wch: max_width.quantity },
+        { wch: max_width.totalAmount },
+        { wch: max_width.createdBy },
+        { wch: max_width.timeCreated },
+        { wch: max_width.staff },
+        { wch: max_width.timeInstall },
+        { wch: max_width.warrantyPeriod },
+        { wch: max_width.status },
+      ];
+
+      // Apply styles
+      worksheet['A1'].s = headerStyle;
+      worksheet['B1'].s = headerStyle;
+      worksheet['C1'].s = headerStyle;
+      worksheet['D1'].s = headerStyle;
+      worksheet['E1'].s = headerStyle;
+      worksheet['F1'].s = headerStyle;
+      worksheet['G1'].s = headerStyle;
+      worksheet['H1'].s = headerStyle;
+      worksheet['C1'].s = headerStyle;
+      worksheet['I1'].s = headerStyle;
+      worksheet['J1'].s = headerStyle;
+
+      for (let R = 1; R <= rows.length; R++) {
+        for (let C = 0; C < 11; C++) {
+          const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
+          if (!worksheet[cellAddress]) continue;
+          worksheet[cellAddress].s = R % 2 === 0 ? rowStyle : alternateRowStyle;
+        }
+      }
+      XLSX.writeFile(workbook, filename);
+    } catch (error) {
+      console.error('Error generating XLSX file:', error);
+    }
+  };
+  const handleExportALlDataXLSX = async () => {
+    withLoading(async () => {
+      await generateXLSXFile(listInstall, 'installs.xlsx');
+    });
+  };
+
   /* Inittial value for root app */
   useEffect(() => {
     handleGetListInstall(searchParams);
@@ -186,7 +294,13 @@ const InstallManagement: React.FC = () => {
 
   return (
     <Row className="contract-management_container">
-      <Breadcrumb title="Hồ sơ lắp đặt" />
+      <div className="export_action-header-management">
+        <Breadcrumb title="Hồ sơ lắp đặt" />
+        <Button onClick={handleExportALlDataXLSX} style={{ width: 160 }} className="btn btn-add">
+          Xuất báo cáo
+        </Button>
+      </div>
+
       <Container>
         <Form form={form} layout="vertical" className="contract-management_form" onFinish={handleSubmit}>
           <Row gutter={[10, 0]}>

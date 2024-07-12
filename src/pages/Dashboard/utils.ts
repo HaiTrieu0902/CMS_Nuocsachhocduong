@@ -43,10 +43,7 @@ function renderPriceEl(priceEl: HTMLDivElement, dataPoint: TooltipItem<'line'>) 
   priceEl.appendChild(text);
 }
 
-export function externalTooltipHandler(args: {
-  chart: Chart<'line'>;
-  tooltip: TooltipModel<'line'>;
-}) {
+export function externalTooltipHandler(args: { chart: Chart<'line'>; tooltip: TooltipModel<'line'> }) {
   const { chart, tooltip } = args;
 
   const tooltipEl = getOrCreateTooltip(chart);
@@ -128,7 +125,6 @@ export function generateRandomNumbers(count: number = 1000): number[] {
 export function generateNextTenYears(): { value: number; label: string }[] {
   const currentYear = new Date().getFullYear();
   const years: { value: number; label: string }[] = [];
-
   for (let i = 0; i < 10; i++) {
     const year = currentYear - i;
     years.push({
@@ -139,3 +135,48 @@ export function generateNextTenYears(): { value: number; label: string }[] {
 
   return years;
 }
+
+/////////////////////////// REPORT /////////////////////////////////
+
+export const headerStyle = {
+  fill: { fgColor: { rgb: '0e8449' } },
+  font: { bold: true, color: { rgb: 'FFFFFF' } },
+  border: {
+    top: { style: 'thin', color: { rgb: '3666c1' } },
+    bottom: { style: 'thin', color: { rgb: '3666c1' } },
+    left: { style: 'thin', color: { rgb: '3666c1' } },
+    right: { style: 'thin', color: { rgb: '3666c1' } },
+  },
+  alignment: { horizontal: 'center', vertical: 'center' },
+};
+
+export const rowStyle = {
+  fill: { fgColor: { rgb: '89c7ff' } },
+  border: {
+    top: { style: 'thin', color: { rgb: '3666c1' } },
+    bottom: { style: 'thin', color: { rgb: '3666c1' } },
+    left: { style: 'thin', color: { rgb: '3666c1' } },
+    right: { style: 'thin', color: { rgb: '3666c1' } },
+  },
+};
+
+export const alternateRowStyle = {
+  fill: { fgColor: { rgb: 'FFFFFF' } },
+  border: {
+    top: { style: 'thin', color: { rgb: '3666c1' } },
+    bottom: { style: 'thin', color: { rgb: '3666c1' } },
+    left: { style: 'thin', color: { rgb: '3666c1' } },
+    right: { style: 'thin', color: { rgb: '3666c1' } },
+  },
+};
+
+export const totalStyle = {
+  fill: { fgColor: { rgb: '0e8449' } },
+  font: { bold: true, color: { rgb: 'FFFFFF' } },
+  border: {
+    top: { style: 'thin', color: { rgb: '3666c1' } },
+    bottom: { style: 'thin', color: { rgb: '3666c1' } },
+    left: { style: 'thin', color: { rgb: '0e8449' } },
+    right: { style: 'thin', color: { rgb: '0e8449' } },
+  },
+};

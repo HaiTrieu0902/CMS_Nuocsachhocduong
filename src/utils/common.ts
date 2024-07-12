@@ -8,7 +8,6 @@ import { FileLoader, UploadAdapter } from '@ckeditor/ckeditor5-upload';
 import { RcFile } from 'antd/es/upload';
 import { UploadFile } from 'antd/lib';
 import dayjs from 'dayjs';
-
 /**  emailValidationPattern */
 export const emailValidationPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -190,6 +189,7 @@ export const updateEditorContent = async (uploadedImages: any, editorContent: st
         img.setAttribute('src', `${imgSrc}`);
         img.setAttribute('style', 'width: 100% !important; object-fit: contain');
         img.setAttribute('width', 'auto');
+
         img.setAttribute('height', 'auto');
       }
     }
@@ -378,7 +378,7 @@ export const handleGetCategoryMaintenanceId = (data: IInstallRecord[], idSelecte
 export const convertDate = (date: any) => {
   const options: any = { hour: '2-digit', minute: '2-digit', hour12: true };
   const res = date.toLocaleTimeString('en-US', options);
-  return res;
+  return res || 'N/A';
 };
 
 export const renderContentClearSpecialCharacter = (content: any) => {

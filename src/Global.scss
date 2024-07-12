@@ -137,7 +137,13 @@ body {
 .text_pending {
   color: var(--warning-regular);
 }
-
+.export_action-header-management {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-bottom: 10px;
+}
 .header-avatar__container {
   display: flex;
   flex-direction: row;

@@ -2,7 +2,7 @@
 import { AxiosResponse } from '@umijs/max';
 import client from '..';
 
-export const getListRevenueAPI = (params: { year: any }) => {
+export const getListRevenueAPI = (params: { year: any  , type: string}) => {
   return client.get('revenue/revenue-dashbroad', { params }).then((res: AxiosResponse) => res.data);
 };
 
