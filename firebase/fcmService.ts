@@ -6,11 +6,11 @@ import { messaging } from './firebase';
 async function requestUserPermission() {
   try {
     const currentToken = await getToken(messaging, {
-      vapidKey: 'BC1WxgAbydOTTsBD6KnX2eeQoMMV1uyZlBG2GRFUB64GTAEhdxgcCU1kVwo9Y6oY-2CG5CrczcWvSVwdf80xUQI',
+      vapidKey: 'BDEcfeiVKABugqeFAxcFKIUK8iusZtdzOCGD-_os7f83BFeo4Pms3fiz6L9Z3Jf7AFAI2u2dVrFLokwWnc4W_4E',
     });
     if (currentToken) {
-      console.log('📢 [fcmService.ts:11]', currentToken);
       localStorage.setItem(ETOKEN.TOKEN_DEVICES, currentToken);
+      console.log('currentToken', currentToken);
     } else {
       console.log('No registration token available. Request permission to generate one.');
     }
