@@ -6,7 +6,7 @@ import { messaging } from './firebase';
 async function requestUserPermission() {
   try {
     const currentToken = await getToken(messaging, {
-      vapidKey: 'BDEcfeiVKABugqeFAxcFKIUK8iusZtdzOCGD-_os7f83BFeo4Pms3fiz6L9Z3Jf7AFAI2u2dVrFLokwWnc4W_4E',
+      vapidKey: 'BAns7L-faGDXGAJtePIUKEotaNOjYQdjWmJ2diuEZiA5Ae7D8aDzbA7QyynGTuX1rghZlQlkRovitBeKYp8mboE',
     });
     if (currentToken) {
       localStorage.setItem(ETOKEN.TOKEN_DEVICES, currentToken);
@@ -29,8 +29,11 @@ function setupOnMessageListener() {
 export const onMessageListener = () =>
   new Promise((resolve) => {
     onMessage(messaging, (payload) => {
+      console.log('cek', messaging, payload);
       resolve(payload);
     });
+  }).catch(() => {
+    console.log('errr');
   });
 
 // Initial setup

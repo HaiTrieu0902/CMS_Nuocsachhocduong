@@ -3,7 +3,6 @@ import { initializeApp } from 'firebase/app';
 import { getMessaging } from 'firebase/messaging';
 
 // Firebase configuration
-console.log('REACT_APP_API_KEY', REACT_APP_API_KEY);
 
 const firebaseConfig = {
   // apiKey: REACT_APP_API_KEY,

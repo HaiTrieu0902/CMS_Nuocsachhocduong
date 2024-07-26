@@ -62,37 +62,41 @@ const Notification = () => {
   };
 
   useEffect(() => {
-    const pushNotification = onMessageListener().then((payload: any) => {
-      setListNotification((prev: any) => [
-        {
-          id: payload?.data?.notiId,
-          title: payload?.data?.title,
-          isRead: false,
-          isReadAdmin: false,
-          type: 'install',
-          data: {
-            time: new Date(),
+    const pushNotification = onMessageListener()
+      .then((payload: any) => {
+        setListNotification((prev: any) => [
+          {
+            id: payload?.data?.notiId,
             title: payload?.data?.title,
+            isRead: false,
+            isReadAdmin: false,
+            type: 'install',
+            data: {
+              time: new Date(),
+              title: payload?.data?.title,
+            },
+            createdAt: payload?.data?.time || new Date(),
           },
-          createdAt: payload?.data?.time || new Date(),
-        },
-        ...prev,
-      ]);
-      if (payload) {
-        setTotalParam((prev) => ({
           ...prev,
-          inCreaseNotifications: totalParam?.inCreaseNotifications + 1,
-        }));
-        const openNotification = (placement: NotificationPlacement) => {
-          api.info({
-            message: `Notification`,
-            description: `${renderContentClearSpecialCharacter(payload.notification?.body)}`,
-            placement,
-          });
-        };
-        openNotification('topRight');
-      }
-    });
+        ]);
+        if (payload) {
+          setTotalParam((prev) => ({
+            ...prev,
+            inCreaseNotifications: totalParam?.inCreaseNotifications + 1,
+          }));
+          const openNotification = (placement: NotificationPlacement) => {
+            api.info({
+              message: `Notification`,
+              description: `${renderContentClearSpecialCharacter(payload.notification?.body)}`,
+              placement,
+            });
+          };
+          openNotification('topRight');
+        }
+      })
+      .catch((err) => {
+        console.log('errr', err);
+      });
     return () => {
       pushNotification.catch((err: any) => {
         console.log('Failed: ', err);
