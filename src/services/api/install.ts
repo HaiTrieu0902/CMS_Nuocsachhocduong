@@ -15,6 +15,10 @@ export const updateInstallAPI = (params: IInstall) => {
   return client.put(`install/update-install`, params).then((res: AxiosResponse) => res.data);
 };
 
+export const getListDeviceInstallAPI = (params: IGetListParamInstall) => {
+  return client.get('install/get-list-device-install', { params }).then((res: AxiosResponse) => res.data);
+};
+
 // export const deleteInstallAPI = (id: string) => {
 //   return client.delete(`install/delete-install/${id}`).then((res: AxiosResponse<any>) => res.data);
 // };

@@ -24,6 +24,7 @@ import {
   SettingsActiveIcon,
   SettingsIactiveIcon,
 } from '@/components';
+import { DownloadOutlined } from '@ant-design/icons';
 import type { RunTimeLayoutConfig } from '@umijs/max';
 import { history, useLocation, useModel } from '@umijs/max';
 import { Col, ConfigProvider, Layout, Row, Typography } from 'antd';
@@ -83,6 +84,14 @@ const renderSideBarIcon = (path: string, hasSubmenu = false, isCollapse: boolean
       return currentPathName.includes(path) ? <HomeActiveIcon /> : <HomeInactiveIcon />;
     case ESidebarPath.INSTALL:
       return currentPathName.includes(path) ? <AgreementActiveIcon /> : <AgreementInactiveIcon />;
+    case ESidebarPath.DEVICE_INSTALL:
+      return currentPathName.includes(path) ? (
+        <DownloadOutlined style={{ color: 'white', fontSize: 20 }} />
+      ) : (
+        <DownloadOutlined style={{ color: 'black', fontSize: 20 }} />
+      );
+
+    //<AlignCenterOutlined /> : <AlignCenterOutlined />;
 
     default:
       break;

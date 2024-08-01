@@ -128,6 +128,13 @@ const MaintenanceManagement: React.FC = () => {
       },
     },
     {
+      title: 'Tiêu đề sự cố sự cố',
+      width: '15%',
+      render: (text, row) => {
+        return <TooltipCell title={row?.title} content={row?.title} />;
+      },
+    },
+    {
       title: 'Thông tin sự cố',
       width: '15%',
       render: (text, row) => {
@@ -173,7 +180,7 @@ const MaintenanceManagement: React.FC = () => {
 
     {
       title: 'Trạng thái',
-      width: '12%',
+      width: '10%',
       render: (text, row) => {
         return (
           <TooltipCell
@@ -246,7 +253,7 @@ const MaintenanceManagement: React.FC = () => {
           <Row gutter={[12, 0]}>
             <Col span={5}>
               <Form.Item label="Từ khóa tìm kiếm" name="search" required={false}>
-                <InputUI allowClear placeholder="Mã sự cố, bảo dưỡng" />
+                <InputUI allowClear placeholder="Nhập thông tin sự cố" />
               </Form.Item>
             </Col>
             <Col span={5}>

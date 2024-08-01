@@ -2,9 +2,7 @@
 import {
   Breadcrumb,
   Container,
-  DatePickerUI,
   InputUI,
-  PlusIcon,
   PopupConfirm,
   SearchColorBlueIcon,
   SearchIcon,
@@ -17,7 +15,6 @@ import useModal from '@/hooks/useModal';
 import { TableParams } from '@/models/common.model';
 import { IGetListParamNotification, INotification } from '@/models/notification.model';
 import { deleteNotificationAPI, getListNotificationAPI } from '@/services/api/notification';
-import { history } from '@umijs/max';
 import { Button, Col, Form, Row, Table, TableColumnsType, message } from 'antd';
 import { DatePickerProps } from 'antd/lib';
 import { format } from 'date-fns';
@@ -86,9 +83,6 @@ const NotificationManagement: React.FC = () => {
     }
   };
 
-  const handleNavigator = () => {
-    history.push(`/notification/create`);
-  };
   /** handle change date */
   const handleDateChange: DatePickerProps['onChange'] = (date: any, name) => {
     setStartMonth(date);
@@ -100,6 +94,7 @@ const NotificationManagement: React.FC = () => {
       pageSize: DEFAULT_SIZE_PAGE,
       page: DEFAULT_PAGE_NUMBER,
       search: values?.search?.trim() || '',
+      receiverId: authUser?.id || '68821b5d-176c-4e2d-a0ca-2cd7d0641d47',
     });
   };
 
@@ -167,47 +162,36 @@ const NotificationManagement: React.FC = () => {
 
   /** Use Effect */
   useEffect(() => {
-    handleGetListNotification(searchParams);
-  }, [searchParams]);
+    if (authUser?.id) {
+      handleGetListNotification(searchParams);
+    }
+  }, [searchParams, authUser?.id]);
 
   return (
     <Row className="notification-management_container">
       <Breadcrumb title="Danh Sách thông Báo" />
       <Container>
         <Form form={form} layout="vertical" className="notification-management_form" onFinish={handleSubmit}>
-          <Row gutter={[16, 12]}>
+          <Row>
             <Col span={5}>
               <Form.Item label="Tiêu đề tin tức" name="search" required={false}>
                 <InputUI placeholder="Tiêu đề thông báo" />
               </Form.Item>
             </Col>
-            <Col span={5}>
-              <Form.Item label="Tháng/Năm" name="date" required={false}>
-                <DatePickerUI
-                  allowClear={false}
-                  picker="month"
-                  value={dayjs(startMonth)}
-                  format={'MM/YYYY'}
-                  onChange={handleDateChange}
-                />
-              </Form.Item>
-            </Col>
-          </Row>
-
-          <Row gutter={[10, 10]}>
+            <Col span={18}></Col>
             <Col span={3}>
               <Button icon={<SearchIcon />} className="btn btn-primary" key="submit" htmlType="submit">
                 Tìm kiếm
               </Button>
             </Col>
             <Col span={4}>
-              <Button
+              {/* <Button
                 icon={<PlusIcon />}
                 // onClick={handleNavigator}
                 className="btn btn-add"
               >
                 Thêm thông báo
-              </Button>
+              </Button> */}
             </Col>
           </Row>
         </Form>

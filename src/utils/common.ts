@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { EMAINTENANCE, EMaintenanceConvert, EMaintenanceStatus, ETYPE_ACCOUNT } from '@/constants/enum';
+import { EMAINTENANCE, EMaintenanceConvert, EMaintenanceStatus, ESTATUS, ETYPE_ACCOUNT } from '@/constants/enum';
 import { BASE_URL } from '@/constants/urls';
 import { IInstallRecord } from '@/models/install.model';
 import { UploadImagesMultiplieApi } from '@/services/api/common';
@@ -7,6 +7,7 @@ import { Editor } from '@ckeditor/ckeditor5-core';
 import { FileLoader, UploadAdapter } from '@ckeditor/ckeditor5-upload';
 import { RcFile } from 'antd/es/upload';
 import { UploadFile } from 'antd/lib';
+import { addMonths, format } from 'date-fns';
 import dayjs from 'dayjs';
 /**  emailValidationPattern */
 export const emailValidationPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -330,6 +331,8 @@ const headerDescriptions: RouteDescription[] = [
   { pattern: /^\/school\/agreements\/[^/]+$/, description: 'TRƯỜNG HỌC' }, // id
 
   { pattern: /^\/install$/, description: 'HỒ SƠ LẮP ĐẶT' },
+
+  { pattern: /^\/device-install$/, description: 'THIẾT BỊ ĐÃ LẮT ĐẶT' },
 ];
 
 export const getTextHeaderDescription = (pathname: string): string => {
@@ -387,4 +390,48 @@ export const renderContentClearSpecialCharacter = (content: any) => {
     return group;
   });
   return text;
+};
+
+export const calculateWarrantyExpiryDate = (timeInstall: any, warrantyPeriod: any) => {
+  const installDate = new Date(timeInstall);
+  const expiryDate = addMonths(installDate, warrantyPeriod);
+  return format(expiryDate, 'dd/MM/yyyy HH:mm:ss');
+};
+
+export const revertStatusDevice = (row: IInstallRecord) => {
+  const isCompleted = (statusId: any) => statusId === ESTATUS.COMPLETE || statusId === ESTATUS.COMPLETED;
+  if (isCompleted(row?.status?.id)) {
+    if (row?.maintenances && row?.maintenances.length > 0) {
+      const maintenance = row.maintenances[0];
+      const maintenanceStatus = isCompleted(maintenance.statusId);
+      if (maintenance.categoryMaintenanceId === EMAINTENANCE.BD) {
+        return maintenanceStatus ? 'Bình thường' : 'Đang bảo dưỡng';
+      } else {
+        return maintenanceStatus ? 'Bình thường' : 'Đang sửa chữa';
+      }
+    } else {
+      return 'Bình thường';
+    }
+  } else {
+    return 'Đang lắp đặt';
+  }
+};
+
+export const revertNoteDevice = (row: IInstallRecord) => {
+  const isCompleted = (statusId: any) => statusId === ESTATUS.COMPLETE || statusId === ESTATUS.COMPLETED;
+  if (isCompleted(row?.status?.id)) {
+    if (row?.maintenances && row?.maintenances.length > 0) {
+      const maintenance = row.maintenances[0];
+      const maintenanceStatus = isCompleted(maintenance.statusId);
+      if (maintenance.categoryMaintenanceId === EMAINTENANCE.BD) {
+        return maintenanceStatus ? '' : `${maintenance?.title} / ${maintenance?.reason}`;
+      } else {
+        return maintenanceStatus ? '' : `${maintenance?.title} / ${maintenance?.reason}`;
+      }
+    } else {
+      return '';
+    }
+  } else {
+    return '';
+  }
 };

@@ -180,3 +180,6 @@ export const totalStyle = {
     right: { style: 'thin', color: { rgb: '0e8449' } },
   },
 };
+
+
+

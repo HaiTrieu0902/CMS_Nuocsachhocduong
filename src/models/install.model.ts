@@ -41,6 +41,20 @@ export interface IInstallRecord {
     id: string;
     name: string;
   };
+  maintenances?: {
+    id?: string;
+    categoryMaintenanceId: string;
+    accountId?: string;
+    staffId?: string;
+    installRecordId: string;
+    schoolId: string;
+    statusId: string;
+    title: string;
+    reason: string;
+    repairFees?: number;
+    timeMaintenance?: Date | any;
+  }[];
+
   createdAt?: string | any;
   updatedAt?: string | any;
 }

@@ -138,8 +138,6 @@ const AddOrUpdateMaintain = ({ isActive, title, data, onCancel, onSuccess }: Add
     [form?.getFieldValue('installRecordId'), fileList, listInstallRecord],
   );
 
-  console.log('data', data);
-
   /* Changed file list */
   const onChangeFileList: UploadProps['onChange'] = ({ fileList: newFileList }) => {
     setFileList(newFileList);
@@ -159,11 +157,23 @@ const AddOrUpdateMaintain = ({ isActive, title, data, onCancel, onSuccess }: Add
     }
   }, [isActive]);
 
+  console.log('data', data?.repairFees);
   /** Set Initial Form */
   useEffect(() => {
     if (data?.id && isActive) {
-      const { school, installRecord, title, reason, staff, images_request, images_response, id, categoryMaintenance } =
-        data;
+      const {
+        school,
+        installRecord,
+        title,
+        reason,
+        staff,
+        images_request,
+        images_response,
+        id,
+        categoryMaintenance,
+        reasonRepair,
+        solution,
+      } = data;
       const initialForm = {
         schoolId: school?.id,
         installRecordId: installRecord?.id,
@@ -171,6 +181,8 @@ const AddOrUpdateMaintain = ({ isActive, title, data, onCancel, onSuccess }: Add
         title,
         reason,
         staffId: staff?.id,
+        reasonRepair: reasonRepair,
+        solution: solution,
       };
       handleGetListStaffBySchool(school?.id);
       handleGetListInstallRecord(school?.id, installRecord?.id);
@@ -415,6 +427,68 @@ const AddOrUpdateMaintain = ({ isActive, title, data, onCancel, onSuccess }: Add
               </Button>
             </Upload>
           </Col>
+
+          {/* Hoàn thành*/}
+
+          {data?.status?.id === ESTATUS.COMPLETED && (
+            <>
+              <Col span={24} style={{ marginTop: 10 }}>
+                <Form.Item
+                  label="Nguyên nhân :"
+                  name="reasonRepair"
+                  required={true}
+                  rules={[
+                    {
+                      required: true,
+                      message: 'Tiêu đề không được trống',
+                    },
+                  ]}
+                >
+                  <InputUI
+                    disabled={
+                      data?.status?.id === ESTATUS.COMPLETE ||
+                      data?.status?.id === ESTATUS.COMPLETED ||
+                      data?.status?.id === ESTATUS.INPROGRESS
+                    }
+                    placeholder="Nhập tiêu đề"
+                  />
+                </Form.Item>
+              </Col>
+              <Col span={24}>
+                <Form.Item
+                  label="Giải pháp"
+                  name="solution"
+                  required={true}
+                  rules={[
+                    {
+                      required: true,
+                      message: 'Hiện trạng không được trống',
+                    },
+                    {
+                      max: 200,
+                      message: 'Tối đa 200 ký tự',
+                    },
+                  ]}
+                >
+                  <TextArea
+                    disabled={
+                      data?.status?.id === ESTATUS.COMPLETE ||
+                      data?.status?.id === ESTATUS.COMPLETED ||
+                      data?.status?.id === ESTATUS.INPROGRESS
+                    }
+                    // showCount
+                    // maxLength={300}
+                    placeholder="Nhập nội dung tóm tắt"
+                    style={{ height: 144, resize: 'none', width: '100%' }}
+                  />
+                </Form.Item>
+              </Col>
+            </>
+          )}
+
+          {data?.status?.id === ESTATUS.COMPLETED && data?.repairFees > 0 && (
+            <Typography.Text>Số tiền sửa chữa là: {Number(data?.repairFees).toLocaleString()} VNĐ</Typography.Text>
+          )}
         </Row>
 
         <Row>

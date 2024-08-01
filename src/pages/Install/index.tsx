@@ -38,7 +38,13 @@ const InstallManagement: React.FC = () => {
   };
 
   /** handle submit */
-  const handleSubmit = () => {};
+  const handleSubmitSearch = (values: any) => {
+    setSearchParams((prevParams) => ({
+      ...prevParams,
+      page: DEFAULT_PAGE_NUMBER,
+      search: values?.search?.trim() || '',
+    }));
+  };
 
   /** handle Table Change */
   const handleTableChange = (pagination: any) => {
@@ -302,11 +308,11 @@ const InstallManagement: React.FC = () => {
       </div>
 
       <Container>
-        <Form form={form} layout="vertical" className="contract-management_form" onFinish={handleSubmit}>
+        <Form form={form} layout="vertical" className="contract-management_form" onFinish={handleSubmitSearch}>
           <Row gutter={[10, 0]}>
             <Col span={6}>
-              <Form.Item label="Từ khóa tìm kiếm" name="title" required={false}>
-                <InputUI placeholder="Mã hoặc tên Hồ sơ lắp đặt" />
+              <Form.Item label="Từ khóa tìm kiếm" name="search" required={false}>
+                <InputUI placeholder="Nhập thông tin hồ sơ lắp đặt" />
               </Form.Item>
             </Col>
             <Col span={18}></Col>

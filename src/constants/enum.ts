@@ -8,6 +8,7 @@ export enum ESidebarPath {
   ACCOUNT = '/account',
   SCHOOL = '/school',
   INSTALL = '/install',
+  DEVICE_INSTALL = '/device-install',
 }
 
 export enum ETYPE_ACCOUNT {

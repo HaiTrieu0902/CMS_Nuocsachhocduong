@@ -29,6 +29,13 @@ export default [
     component: './Dashboard',
   },
 
+  {
+    path: '/device-install',
+    name: 'Thiết bị đã lắp đặt',
+    icon: 'appstore',
+    component: './DeviceInstall',
+  },
+
   /* Maintain */
   {
     path: '/maintenance',
