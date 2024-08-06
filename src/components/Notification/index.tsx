@@ -33,6 +33,7 @@ const Notification = () => {
           page: page,
           pageSize: DEFAULT_SIZE_PAGE,
           receiverId: authUser?.id || '68821b5d-176c-4e2d-a0ca-2cd7d0641d47',
+          search: '',
         };
         const res = await getListNotificationAPI(param);
         if (listNotification) {

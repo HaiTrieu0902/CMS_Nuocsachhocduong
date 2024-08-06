@@ -75,6 +75,7 @@ const SchoolManagement: React.FC = () => {
       pageSize: tableParams?.pagination?.pageSize as number,
       page: tableParams?.pagination?.current as number,
       search: values?.search || '',
+      isDelete: false,
     });
   };
 
