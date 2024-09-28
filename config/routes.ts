@@ -29,6 +29,13 @@ export default [
     component: './Dashboard',
   },
 
+  {
+    path: '/device-install',
+    name: 'Thiết bị đã lắp đặt',
+    icon: 'appstore',
+    component: './DeviceInstall',
+  },
+
   /* Maintain */
   {
     path: '/maintenance',
@@ -57,6 +64,14 @@ export default [
     name: 'cập nhật sản phẩm',
     component: './Product/AddOrUpdateProduct',
     hideInMenu: true,
+  },
+
+  /* Product */
+  {
+    path: '/category',
+    name: 'Phân loại sản phẩm',
+    icon: 'appstore',
+    component: './Category',
   },
 
   /* News */
@@ -119,12 +134,36 @@ export default [
     component: './School',
   },
 
+  // {
+  //   path: '/school/revenue/:id',
+  //   name: 'Doanh thu trường học',
+  //   icon: 'appstore',
+  //   component: './School/Revenue',
+  //   hideInMenu: true,
+  // },
+
+  // {
+  //   path: '/school/invest',
+  //   name: 'Danh sách thiết bị đầu tư',
+  //   icon: 'appstore',
+  //   component: './School/InvestEquipment',
+  //   hideInMenu: true,
+  // },
+
+  // {
+  //   path: '/school/agreements/:id',
+  //   name: 'Danh sách hợp đồng trường học',
+  //   icon: 'appstore',
+  //   component: './School/ListContract',
+  //   hideInMenu: true,
+  // },
+
+  /* install */
   {
-    path: '/school/revenue',
-    name: 'Doanh thu trường học',
+    path: '/install',
+    name: 'Quản lý hồ sơ lắp đặt',
     icon: 'appstore',
-    component: './School/Revenue',
-    hideInMenu: true,
+    component: './Install',
   },
 
   {

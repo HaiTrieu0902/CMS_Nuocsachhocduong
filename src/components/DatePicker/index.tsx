@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { DatePicker as AntDatePicker, DatePickerProps } from 'antd';
-import locale from 'antd/es/date-picker/locale/en_US'; // Import English locale
+import locale from 'antd/es/locale/vi_VN';
 
 type IProps = {
   isShowIcon?: boolean;
@@ -13,7 +13,7 @@ export const DatePickerUI = (props: IProps) => {
   return (
     <AntDatePicker
       className={datePickerClassName}
-      locale={locale} // Set locale to English
+      locale={locale as any} // Set locale to English
       // {...(isShowIcon && {
       //   suffixIcon: <CalendarIcon />,
       // })}

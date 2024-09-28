@@ -1,10 +1,25 @@
+import { IGetListParamCommon } from './common.model';
 export interface IAccount {
-  email: string;
-  password: string;
+  id?: string;
   fullName: string;
-  phoneNumber: number;
-  role: string;
+  email: string;
+  phoneNumber: string;
+  schoolIds: string[];
   avatar: string;
-  dob: string | undefined;
-  school?: string;
+  isDelete?: boolean;
+  codeOTP?: null;
+  dob: any | string;
+  createdAt?: Date | string;
+  updatedAt?: Date | string;
+  password?: string;
+  role?: string;
+  roleId?: string;
+  schools?: {
+    id: string;
+    name: string;
+  }[];
+}
+
+export interface IGetListParamsUser extends IGetListParamCommon {
+  roleId?: string;
 }

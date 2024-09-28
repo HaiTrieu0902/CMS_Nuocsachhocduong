@@ -1,0 +1,20 @@
+.contract-management_container {
+  .contract-management_form {
+    .ant-form-item-label {
+      label {
+        color: var(--text-dark);
+        font-weight: 600;
+        font-size: 14px;
+        font-style: normal;
+        line-height: normal;
+      }
+    }
+  }
+  .text_date {
+    color: var(--text-primary2, #767e94);
+    font-weight: 400;
+    font-size: 13px;
+    font-style: normal;
+    line-height: normal;
+  }
+}

@@ -1,205 +1,226 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import {
-  ArrowLeftIcon,
-  ArrowRightIcon,
   Breadcrumb,
   Container,
-  DatePickerUI,
   InputUI,
-  PencilIcon,
-  PlusIcon,
+  PopupConfirm,
+  SearchColorBlueIcon,
   SearchIcon,
+  TooltipCell,
   TrashIcon,
 } from '@/components';
-import { history, useModel } from '@umijs/max';
-import { Button, Col, Form, Row, Table } from 'antd';
+import { DEFAULT_PAGE_NUMBER, DEFAULT_SIZE_PAGE, authUser, defaultTableParams } from '@/constants';
+import useLoading from '@/hooks/useLoading';
+import useModal from '@/hooks/useModal';
+import { TableParams } from '@/models/common.model';
+import { IGetListParamNotification, INotification } from '@/models/notification.model';
+import { deleteNotificationAPI, getListNotificationAPI } from '@/services/api/notification';
+import { Button, Col, Form, Row, Table, TableColumnsType, message } from 'antd';
 import { DatePickerProps } from 'antd/lib';
+import { format } from 'date-fns';
 import dayjs from 'dayjs';
 import React, { useEffect, useState } from 'react';
 import './Notification.scss';
 
 const NotificationManagement: React.FC = () => {
-  const { setInitialState } = useModel('@@initialState');
-
   const [form] = Form.useForm();
   const currentDate = dayjs();
+  const { isLoading, withLoading } = useLoading();
   const tempStartMonth = dayjs().month(currentDate.month()).date(currentDate.date());
   const [startMonth, setStartMonth] = useState<dayjs.Dayjs>(tempStartMonth);
+  const [listNotification, setListNotification] = useState<INotification[]>([]);
+  const [tableParams, setTableParams] = useState<TableParams>({
+    pagination: defaultTableParams,
+  });
+  const [searchParams, setSearchParams] = useState<IGetListParamNotification>({
+    pageSize: DEFAULT_SIZE_PAGE,
+    page: DEFAULT_PAGE_NUMBER,
+    search: '',
+    receiverId: authUser?.id || '',
+  });
+  const { stateModal: confirmState, toggleModal: toggleConfirmModal, offModal: offConfirmModal } = useModal();
 
-  const handleNavigator = () => {
-    history.push(`/notification/create`);
+  /** handle Table Change */
+  const handleTableChange = (pagination: any) => {
+    setTableParams({
+      ...tableParams,
+      pagination,
+    });
+    setSearchParams((prevParams) => ({
+      ...prevParams,
+      page: pagination.current,
+      size: pagination.pageSize,
+    }));
   };
+
+  /** handle get list product */
+  const handleGetListNotification = async (values: IGetListParamNotification) => {
+    await withLoading(async () => {
+      try {
+        const res = await getListNotificationAPI({ ...values });
+        setListNotification(res?.data);
+        setTableParams({
+          ...tableParams,
+          pagination: {
+            ...tableParams.pagination,
+            current: values.page,
+            total: res.total,
+          },
+        });
+      } catch (error: any) {
+        message.error(error?.message);
+      }
+    });
+  };
+
+  /** handleOnSubmitDelete */
+  const handleOnSubmitDelete = async (row: INotification) => {
+    try {
+      if (row?.id) await deleteNotificationAPI(row?.id);
+      message.success('Xóa tin tức thành công');
+    } catch (error: any) {
+      message.error(error?.message);
+    }
+  };
+
   /** handle change date */
   const handleDateChange: DatePickerProps['onChange'] = (date: any, name) => {
     setStartMonth(date);
-    console.log('date', date);
   };
 
   /** handle submit */
-  const handleSubmit = () => {};
+  const handleSubmit = async (values: any) => {
+    setSearchParams({
+      pageSize: DEFAULT_SIZE_PAGE,
+      page: DEFAULT_PAGE_NUMBER,
+      search: values?.search?.trim() || '',
+      receiverId: authUser?.id || '68821b5d-176c-4e2d-a0ca-2cd7d0641d47',
+    });
+  };
 
   /** config data */
-  const columns = [
+  const columns: TableColumnsType<INotification> = [
     {
       title: 'STT',
       dataIndex: 'stt',
       key: 'stt',
       width: '8%',
+      render: (text, row, index) => {
+        return <TooltipCell content={(index + 1).toString()} />;
+      },
     },
     {
       title: 'Tiêu đề của thông báo',
       dataIndex: 'title',
-      key: 'title',
       width: '20%',
+      render: (text, row) => {
+        return <TooltipCell title={row?.data?.title} content={row?.data?.title} />;
+      },
     },
     {
       title: 'Ngày gửi thông báo ',
       dataIndex: 'date',
-      key: 'date',
       width: '20%',
-    },
-    {
-      title: 'Trường học nhận thông báo',
-      dataIndex: 'notification',
-      key: 'notification',
-      width: '42%',
+      render: (text, row) => {
+        return (
+          <TooltipCell
+            title={
+              row?.data?.time ? format(new Date(row?.data?.time), 'dd/MM/yyyy HH:mm:ss') : row?.data?.time || 'N/A'
+            }
+            content={
+              row?.data?.time ? format(new Date(row?.data?.time), 'dd/MM/yyyy HH:mm:ss') : row?.data?.time || 'N/A'
+            }
+          />
+        );
+      },
     },
     {
       title: 'Thao tác',
       dataIndex: 'action',
       key: 'action',
+      align: 'center',
       width: '10%',
-      render: (text: any, row: any) => (
-        <Row gutter={[8, 10]}>
-          <Col>
-            <PencilIcon />
-          </Col>
-          <Col>
-            <TrashIcon />
-          </Col>
-        </Row>
-      ),
-      ellipsis: {
-        showTitle: false,
+      render: (text, row) => {
+        return (
+          <Row gutter={[8, 10]} justify={'center'}>
+            <Col className={`pointer`}>
+              <SearchColorBlueIcon />
+            </Col>
+            <Col
+              className={`pointer`}
+              onClick={() => {
+                toggleConfirmModal(true, 'delete', row)();
+              }}
+            >
+              <TrashIcon />
+            </Col>
+          </Row>
+        );
       },
     },
   ];
 
-  const dataSource = [
-    {
-      key: '1',
-      stt: 1,
-      title: 'Thông báo 1',
-      date: '2024-05-01',
-      notification: 'Tất cả',
-      action: 'Edit/Delete',
-    },
-    {
-      key: '2',
-      stt: 2,
-      title: 'Thông báo 2',
-      date: '2024-05-02',
-      notification: 'Tất cả',
-      action: 'Edit/Delete',
-    },
-    {
-      key: '3',
-      stt: 3,
-      title: 'Thông báo 3',
-      date: '2024-05-03',
-      notification: 'Tất cả',
-      action: 'Edit/Delete',
-    },
-    {
-      key: '3',
-      stt: 3,
-      title: 'Thông báo 3',
-      date: '2024-05-03',
-      notification: 'Tất cả',
-      action: 'Edit/Delete',
-    },
-    {
-      key: '3',
-      stt: 3,
-      title: 'Thông báo 3',
-      date: '2024-05-03',
-      notification: 'Tất cả',
-      action: 'Edit/Delete',
-    },
-  ];
-
+  /** Use Effect */
   useEffect(() => {
-    form.setFieldValue('date', startMonth);
-    setInitialState((s: any) => ({
-      ...s,
-      data: 'QUẢN LÝ THÔNG BÁO',
-    }));
-  }, []);
+    if (authUser?.id) {
+      handleGetListNotification(searchParams);
+    }
+  }, [searchParams, authUser?.id]);
 
   return (
     <Row className="notification-management_container">
       <Breadcrumb title="Danh Sách thông Báo" />
       <Container>
         <Form form={form} layout="vertical" className="notification-management_form" onFinish={handleSubmit}>
-          <Row gutter={[16, 12]}>
+          <Row>
             <Col span={5}>
-              <Form.Item label="Tiêu đề tin tức" name="title" required={false}>
+              <Form.Item label="Tiêu đề tin tức" name="search" required={false}>
                 <InputUI placeholder="Tiêu đề thông báo" />
               </Form.Item>
             </Col>
-            <Col span={5}>
-              <Form.Item label="Tháng/Năm" name="date" required={false}>
-                <DatePickerUI
-                  allowClear={false}
-                  picker="month"
-                  value={dayjs(startMonth)}
-                  format={'MM/YYYY'}
-                  onChange={handleDateChange}
-                />
-              </Form.Item>
-            </Col>
-          </Row>
-
-          <Row gutter={[10, 10]}>
+            <Col span={18}></Col>
             <Col span={3}>
               <Button icon={<SearchIcon />} className="btn btn-primary" key="submit" htmlType="submit">
                 Tìm kiếm
               </Button>
             </Col>
             <Col span={4}>
-              <Button icon={<PlusIcon />} onClick={handleNavigator} className="btn btn-add">
+              {/* <Button
+                icon={<PlusIcon />}
+                // onClick={handleNavigator}
+                className="btn btn-add"
+              >
                 Thêm thông báo
-              </Button>
+              </Button> */}
             </Col>
           </Row>
         </Form>
       </Container>
       <Container className="mt-24">
         <Table
-          dataSource={dataSource}
+          loading={isLoading}
+          dataSource={listNotification ? (listNotification as never) : []}
           columns={columns}
-          pagination={false}
+          pagination={tableParams.pagination}
           locale={{ emptyText: 'Chưa có dữ liệu' }}
           scroll={{ y: '60vh' }}
           showSorterTooltip={false}
+          onChange={handleTableChange}
         />
-        <Row justify={'end'} align={'stretch'}>
-          <Col span={5}>
-            <Row gutter={[10, 10]}>
-              <Col span={12}>
-                <Button icon={<ArrowLeftIcon />} className="btn btn-add">
-                  Trang trước
-                </Button>
-              </Col>
-              <Col span={12}>
-                <Button className="btn btn-add">
-                  <span style={{ marginRight: 8 }}>Trang sau</span> <ArrowRightIcon />
-                </Button>
-              </Col>
-            </Row>
-          </Col>
-        </Row>
       </Container>
+
+      <PopupConfirm
+        onCancel={offConfirmModal}
+        isActive={confirmState.open}
+        data={confirmState?.data}
+        onSubmit={handleOnSubmitDelete}
+        onSuccess={() =>
+          handleGetListNotification({
+            pageSize: tableParams?.pagination?.pageSize as number,
+            page: tableParams?.pagination?.current as number,
+          })
+        }
+      />
     </Row>
   );
 };

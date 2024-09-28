@@ -4,7 +4,11 @@ import CaretDown from '@/assets/icons/CaretDown.svg';
 import {
   AccountActiveIcon,
   AccountInactiveIcon,
+  AgreementActiveIcon,
+  AgreementInactiveIcon,
   AvatarDropdown,
+  CategoryActiveIcon,
+  CategoryIactiveIcon,
   DashboardActiveIcon,
   DashboardInactiveIcon,
   HomeActiveIcon,
@@ -12,6 +16,7 @@ import {
   ListIcon,
   NewsActiveIcon,
   NewsInactiveIcon,
+  Notification,
   NotificationActiveIcon,
   NotificationInactiveIcon,
   ProductActiveIcon,
@@ -19,18 +24,20 @@ import {
   SettingsActiveIcon,
   SettingsIactiveIcon,
 } from '@/components';
+import { DownloadOutlined } from '@ant-design/icons';
 import type { RunTimeLayoutConfig } from '@umijs/max';
-import { history, useModel } from '@umijs/max';
+import { history, useLocation, useModel } from '@umijs/max';
 import { Col, ConfigProvider, Layout, Row, Typography } from 'antd';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Provider } from 'react-redux';
+import { PersistGate } from 'redux-persist/integration/react';
 import defaultSettings from '../config/defaultSettings';
 import './Global.scss';
 import { ESidebarPath } from './constants/enum';
 import { errorConfig } from './requestErrorConfig';
-import store from './store';
+import store, { persistor } from './store';
+import { getTextHeaderDescription } from './utils/common';
 const { Header } = Layout;
-
 const loginPath = '/user/login';
 
 /**
@@ -58,7 +65,6 @@ export async function getInitialState(): Promise<{
 
 const renderSideBarIcon = (path: string, hasSubmenu = false, isCollapse: boolean) => {
   const currentPathName = window.location.pathname;
-
   switch (path) {
     case ESidebarPath.DASHBOARD:
       return currentPathName.includes(path) ? <DashboardActiveIcon /> : <DashboardInactiveIcon />;
@@ -66,6 +72,8 @@ const renderSideBarIcon = (path: string, hasSubmenu = false, isCollapse: boolean
       return currentPathName.includes(path) ? <SettingsActiveIcon /> : <SettingsIactiveIcon />;
     case ESidebarPath.PRODUCT:
       return currentPathName.includes(path) ? <ProductActiveIcon /> : <ProductIactiveIcon />;
+    case ESidebarPath.CATEGORY:
+      return currentPathName.includes(path) ? <CategoryActiveIcon /> : <CategoryIactiveIcon />;
     case ESidebarPath.NEW:
       return currentPathName.includes(path) ? <NewsActiveIcon /> : <NewsInactiveIcon />;
     case ESidebarPath.NOTIFICATION:
@@ -74,6 +82,16 @@ const renderSideBarIcon = (path: string, hasSubmenu = false, isCollapse: boolean
       return currentPathName.includes(path) ? <AccountActiveIcon /> : <AccountInactiveIcon />;
     case ESidebarPath.SCHOOL:
       return currentPathName.includes(path) ? <HomeActiveIcon /> : <HomeInactiveIcon />;
+    case ESidebarPath.INSTALL:
+      return currentPathName.includes(path) ? <AgreementActiveIcon /> : <AgreementInactiveIcon />;
+    case ESidebarPath.DEVICE_INSTALL:
+      return currentPathName.includes(path) ? (
+        <DownloadOutlined style={{ color: 'white', fontSize: 20 }} />
+      ) : (
+        <DownloadOutlined style={{ color: 'black', fontSize: 20 }} />
+      );
+
+    //<AlignCenterOutlined /> : <AlignCenterOutlined />;
 
     default:
       break;
@@ -82,33 +100,48 @@ const renderSideBarIcon = (path: string, hasSubmenu = false, isCollapse: boolean
 
 // ProLayout 支持的api https://procomponents.ant.design/components/layout
 export const layout: RunTimeLayoutConfig = ({ initialState, setInitialState }) => {
+  const location = useLocation();
+  const [txtHeader, setTxtHeader] = useState<string>();
   const { initialState: initialModelState }: any = useModel('@@initialState');
   const [isCollapse, setIsCollapse] = useState<boolean>();
   const json_user = localStorage.getItem('auth');
   const auth = json_user ? JSON.parse(json_user) : undefined;
   const src = auth?.avatar || 'https://sport-stretching.s3.us-west-2.amazonaws.com/1702005408_4k-image.jpg';
+
+  useEffect(() => {
+    setTxtHeader(getTextHeaderDescription(location?.pathname));
+  }, [location]);
+
   return {
     actionsRender: () => [],
     logo: () => {
       return <></>;
     },
     avatarProps: {
-      src: src,
+      src: 'https://static1.srcdn.com/wordpress/wp-content/uploads/2023/09/gojo-satoru-1.jpg?q=50&fit=crop&w=825&dpr=1.5',
+      // `${BASE_URL}/${src}`,
       title: '',
       render: (_, avatarChildren) => {
         return (
           <Provider store={store}>
-            <AvatarDropdown>
-              <div className="header-avatar__container">
-                {avatarChildren}
-                <div className="header-avatar__container">
-                  <Typography.Title className="formTypo" level={5}>
-                    {auth?.fullName || 'Admin'}
-                  </Typography.Title>
-                  <img src={CaretDown} alt={'CaretDown'} />
-                </div>
-              </div>
-            </AvatarDropdown>
+            <PersistGate loading={null} persistor={persistor}>
+              <Provider store={store}>
+                <Row style={{ alignContent: 'center', marginRight: 4 }}>
+                  <Notification />
+                </Row>
+                <AvatarDropdown>
+                  <div className="header-avatar__container">
+                    {avatarChildren}
+                    <div className="header-avatar__container">
+                      <Typography.Title className="formTypo" level={5}>
+                        {auth?.fullName || 'Admin'}
+                      </Typography.Title>
+                      <img src={CaretDown} alt={'CaretDown'} />
+                    </div>
+                  </div>
+                </AvatarDropdown>
+              </Provider>
+            </PersistGate>
           </Provider>
         );
       },
@@ -154,7 +187,7 @@ export const layout: RunTimeLayoutConfig = ({ initialState, setInitialState }) =
           </Col>
           <Col>
             <Typography.Title style={{ marginTop: -4 }} className="fontTitle" level={5}>
-              {initialModelState?.data || '...'}
+              {txtHeader !== '' ? txtHeader : initialModelState?.data ? initialModelState?.data : ''}
             </Typography.Title>
           </Col>
         </Row>
@@ -165,19 +198,21 @@ export const layout: RunTimeLayoutConfig = ({ initialState, setInitialState }) =
       // if (initialState?.loading) return <PageLoading />;
       return (
         <Provider store={store}>
-          <ConfigProvider
-            theme={{
-              token: {
-                fontFamily: 'Nunito',
-              },
-            }}
-          >
-            {/* <ProLayout>
+          <PersistGate loading={null} persistor={persistor}>
+            <ConfigProvider
+              theme={{
+                token: {
+                  fontFamily: 'Nunito',
+                },
+              }}
+            >
+              {/* <ProLayout>
               <PageContainer fixedHeader > */}
-            {children}
-            {/* </PageContainer>
+              {children}
+              {/* </PageContainer>
             </ProLayout> */}
-          </ConfigProvider>
+            </ConfigProvider>
+          </PersistGate>
         </Provider>
       );
     },

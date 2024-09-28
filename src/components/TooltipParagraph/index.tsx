@@ -10,11 +10,12 @@ const TooltipParagraph: React.FC<any> = ({
   placement,
   children,
   ellipsis,
+  title,
   ...props
 }) => {
   const [truncated, setTruncated] = useState(false);
   return (
-    <Tooltip placement={placement} title={children}>
+    <Tooltip placement={placement} title={title ? title : children}>
       <p style={{ width: width ? width : '100%', color: color, textAlign: textAlign, margin: 0 }} className={className}>
         <>{children}</>
       </p>

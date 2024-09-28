@@ -18,3 +18,13 @@ declare module 'react-fittext';
 declare module 'bizcharts-plugin-slider';
 
 declare const REACT_APP_ENV: 'test' | 'dev' | 'pre' | false;
+declare const REACT_APP_API_KEY: string;
+declare const API_SECRET_KEY: string;
+
+declare const REACT_APP_AUTH_DOMAIN: string;
+declare const REACT_APP_PROJECT_ID: string;
+declare const REACT_APP_STORAGE_BUCKET: string;
+declare const REACT_APP_MESSAGING_SENDER_ID: string;
+declare const REACT_APP_APP_ID: string;
+declare const REACT_APP_MEASUREMENT_ID: string;
+declare const REACT_APP_V_API: string;

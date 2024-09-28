@@ -1,14 +1,17 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { DatePickerUI, InputUI, SelectUI, SortDescendingIcon, XCircleIcon } from '@/components';
-import { ETYPE_ACCOUNT } from '@/constants/enum';
+import { DEFAULT_PAGE_NUMBER, DEFAULT_SIZE_PAGE_MAX } from '@/constants';
+import { EROLE_CONVERT } from '@/constants/enum';
 import useLoading from '@/hooks/useLoading';
 import { IAccount } from '@/models/account.model';
-import { createAccountAPI } from '@/services/api/account';
+import { ISchool } from '@/models/school.model';
+import { createAccountAPI, getDetailUserAPI, updateAccountAPI } from '@/services/api/account';
+import { getListSchoolAPI } from '@/services/api/school';
 import { checkKeyCode, emailValidationPattern } from '@/utils/common';
 import { Button, Col, DatePickerProps, Divider, Form, Modal, Radio, Row, Typography, message } from 'antd';
 import { RadioChangeEvent } from 'antd/lib';
 import dayjs from 'dayjs';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import './AddOrUpdateAccount.scss';
 
 interface AddOrUpdateAccountProps {
@@ -16,23 +19,28 @@ interface AddOrUpdateAccountProps {
   title?: string;
   data?: any;
   onCancel: (value: boolean) => void;
+  onSuccess: () => void;
 }
 
-const AddOrUpdateAccount = ({ isActive, title, data, onCancel }: AddOrUpdateAccountProps) => {
+const AddOrUpdateAccount = ({ isActive, title, data, onCancel, onSuccess }: AddOrUpdateAccountProps) => {
   const [form] = Form.useForm();
   const { isLoading, withLoading } = useLoading();
   const [startDate, setStartDate] = useState<dayjs.Dayjs>(dayjs());
   const [value, setValue] = useState(1);
-
+  const [listSchool, setListSchool] = useState<ISchool[]>([]);
+  const [selectMode, setSelectMode] = useState<'multiple' | undefined>('multiple');
   /** handle change date */
   const handleDateChange: DatePickerProps['onChange'] = (date: any, name) => {
     setStartDate(date);
-    console.log('date', date);
   };
 
   const onChange = (e: RadioChangeEvent) => {
-    console.log('radio checked', e.target.value);
     setValue(e.target.value);
+
+    setSelectMode(e.target.value === EROLE_CONVERT.STAFF ? 'multiple' : undefined);
+    if (e.target.value === EROLE_CONVERT.PRINCIPAL) {
+      form.setFieldValue('schoolIds', undefined);
+    }
   };
 
   const handleCancelModal = () => {
@@ -43,20 +51,78 @@ const AddOrUpdateAccount = ({ isActive, title, data, onCancel }: AddOrUpdateAcco
   const handleSubmit = async (values: IAccount) => {
     await withLoading(async () => {
       try {
-        const { school, ...rest } = values;
+        const { schoolIds, ...rest } = values;
+        const formattedSchool = Array.isArray(schoolIds) ? schoolIds : [schoolIds];
         const params = {
           ...rest,
-          avatar:
-            'https://static0.gamerantimages.com/wordpress/wp-content/uploads/2022/11/gojo-satoru.jpg?q=50&fit=contain&w=1140&h=&dpr=1.5',
+          schoolIds: formattedSchool,
+          avatar: '',
         };
-        const res = await createAccountAPI(params);
-        message.success('Tạo tài khoản thành công');
+
+        if (data?.id) {
+          const { password, ...rest } = params;
+          await updateAccountAPI({ ...rest, id: data?.id });
+          message.success('Cập nhật thông tin khoản thành công');
+        } else {
+          await createAccountAPI(params);
+          message.success('Tạo tài khoản thành công');
+        }
+        onSuccess();
         handleCancelModal();
       } catch (error: any) {
         message.error(error?.message);
       }
     });
   };
+
+  /** Use Effect */
+  useEffect(() => {
+    const handleGetListSchool = async () => {
+      try {
+        const res = await getListSchoolAPI({
+          pageSize: DEFAULT_SIZE_PAGE_MAX,
+          page: DEFAULT_PAGE_NUMBER,
+          isDelete: false,
+        });
+        setListSchool(res?.data);
+      } catch (error: any) {
+        message.error(error?.message);
+      }
+    };
+    if (isActive) {
+      handleGetListSchool();
+    }
+  }, [isActive]);
+
+  /** Use Effect */
+  useEffect(() => {
+    if (data?.id && isActive) {
+      const handleGetAccountDetail = async () => {
+        try {
+          const res = await getDetailUserAPI(data?.id);
+          const setInitialForm: IAccount = {
+            avatar: '',
+            email: res?.data?.email,
+            roleId: res?.data?.roleId,
+            phoneNumber: res?.data?.phoneNumber,
+            fullName: res?.data?.fullName,
+            dob: res?.data?.dob ? dayjs(res?.data?.dob) : undefined,
+            schoolIds:
+              res?.data?.roleId === EROLE_CONVERT.STAFF
+                ? res?.data?.schools?.map((item: any) => {
+                    return item?.id;
+                  })
+                : res?.data?.schools[0]?.id,
+          };
+          setSelectMode(res?.data?.roleId === EROLE_CONVERT.STAFF ? 'multiple' : undefined);
+          form?.setFieldsValue(setInitialForm);
+        } catch (error: any) {
+          message.error(error?.message);
+        }
+      };
+      handleGetAccountDetail();
+    }
+  }, [isActive]);
 
   return (
     <Modal
@@ -65,23 +131,33 @@ const AddOrUpdateAccount = ({ isActive, title, data, onCancel }: AddOrUpdateAcco
       destroyOnClose={true}
       closeIcon={<XCircleIcon />}
       centered
-      title={<Typography.Title className="title-header_modal">Tạo tài khoản</Typography.Title>}
+      title={
+        <Typography.Title className="title-header_modal">
+          {data?.id ? 'Cập nhật tài khoản' : 'Tạo tài khoản'}
+        </Typography.Title>
+      }
       open={isActive}
       onCancel={handleCancelModal}
       className="modal-accoutn-management__container"
     >
-      <Form form={form} layout="vertical" className="addOrUpdate-management_form" onFinish={handleSubmit}>
+      <Form
+        form={form}
+        initialValues={{ roleId: EROLE_CONVERT.STAFF }}
+        layout="vertical"
+        className="addOrUpdate-management_form"
+        onFinish={handleSubmit}
+      >
         <Row gutter={[10, 0]}>
           <Col span={24}>
             <Divider />
           </Col>
           <Col span={24}>
-            <Form.Item label="Loại tài khoản :" name="role" required={false}>
-              <Radio.Group onChange={onChange} defaultValue={ETYPE_ACCOUNT.STAFF} value={value}>
-                <Radio value={ETYPE_ACCOUNT.STAFF}>
+            <Form.Item label="Loại tài khoản :" name="roleId" required={false}>
+              <Radio.Group onChange={onChange} defaultValue={EROLE_CONVERT.STAFF} value={value}>
+                <Radio value={EROLE_CONVERT.STAFF}>
                   <Typography.Text className="title-text-radio_modal">Nhân viên kỹ thuật</Typography.Text>
                 </Radio>
-                <Radio value={ETYPE_ACCOUNT.PRINCIPAL}>
+                <Radio value={EROLE_CONVERT.PRINCIPAL}>
                   <Typography.Text className="title-text-radio_modal">Nhà trường</Typography.Text>
                 </Radio>
               </Radio.Group>
@@ -90,7 +166,7 @@ const AddOrUpdateAccount = ({ isActive, title, data, onCancel }: AddOrUpdateAcco
           <Col span={24}>
             <Form.Item
               label="Chọn trường :"
-              name="school"
+              name="schoolIds"
               required={true}
               rules={[
                 {
@@ -99,7 +175,18 @@ const AddOrUpdateAccount = ({ isActive, title, data, onCancel }: AddOrUpdateAcco
                 },
               ]}
             >
-              <SelectUI placeholder="Chọn trường học phụ trách" options={[{ value: 1, label: 'THPT NTN' }]} />
+              <SelectUI
+                className="select_layout-multiplie"
+                maxTagCount={'responsive'}
+                mode={selectMode}
+                placeholder="Chọn trường học phụ trách"
+                options={listSchool?.map((item) => {
+                  return {
+                    value: item?.id,
+                    label: item?.name,
+                  };
+                })}
+              />
             </Form.Item>
           </Col>
           <Col span={24}>
@@ -153,22 +240,23 @@ const AddOrUpdateAccount = ({ isActive, title, data, onCancel }: AddOrUpdateAcco
               <InputUI onKeyDown={(e: any) => checkKeyCode(e)} placeholder="Nhập số điện thoại" />
             </Form.Item>
           </Col>
-
-          <Col span={24}>
-            <Form.Item
-              label="Nhập mật khẩu:"
-              name="password"
-              required={true}
-              rules={[
-                {
-                  required: true,
-                  message: 'Mật khẩu không được trống',
-                },
-              ]}
-            >
-              <InputUI type="password" placeholder="Nhập mật khẩu" />
-            </Form.Item>
-          </Col>
+          {!data?.id && (
+            <Col span={24}>
+              <Form.Item
+                label="Nhập mật khẩu:"
+                name="password"
+                required={true}
+                rules={[
+                  {
+                    required: true,
+                    message: 'Mật khẩu không được trống',
+                  },
+                ]}
+              >
+                <InputUI type="password" placeholder="Nhập mật khẩu" />
+              </Form.Item>
+            </Col>
+          )}
 
           <Col span={24}>
             <Form.Item label="Ngày sinh" name="dob" required={false}>
@@ -182,9 +270,10 @@ const AddOrUpdateAccount = ({ isActive, title, data, onCancel }: AddOrUpdateAcco
               />
             </Form.Item>
           </Col>
+
           <Col span={24}>
             <Button icon={<SortDescendingIcon />} loading={isLoading} htmlType="submit" className="btn btn-primary">
-              Thêm tài khoản
+              {data?.id ? 'Cập nhật' : 'Thêm tài khoản'}
             </Button>
           </Col>
         </Row>

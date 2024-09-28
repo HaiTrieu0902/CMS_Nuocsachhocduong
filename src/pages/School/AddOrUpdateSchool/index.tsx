@@ -1,28 +1,14 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { DatePickerUI, InputUI, PlusIcon, XCircleIcon } from '@/components';
+import { InputUI, PlusIcon, XCircleIcon } from '@/components';
+import { authUser } from '@/constants';
 import useLoading from '@/hooks/useLoading';
 import { triggerLoadingSchool } from '@/redux/school.slice';
-import { createSchoolAPI } from '@/services/api/school';
+import { createSchoolAPI, updateSChoolAPI } from '@/services/api/school';
 import { useAppDispatch } from '@/store';
-import { UploadOutlined } from '@ant-design/icons';
-import {
-  Button,
-  Col,
-  DatePickerProps,
-  Divider,
-  Form,
-  Input,
-  Modal,
-  Row,
-  Typography,
-  Upload,
-  UploadProps,
-  message,
-} from 'antd';
-import dayjs from 'dayjs';
-import React, { useState } from 'react';
+import { Button, Col, Divider, Form, Modal, Row, Typography, message } from 'antd';
+import React, { useEffect } from 'react';
 import './AddOrUpdateSchool.scss';
-const { TextArea } = Input;
+
 interface AddOrUpdateSchoolProps {
   isActive: boolean;
   title?: string;
@@ -34,14 +20,6 @@ const AddOrUpdateSchool = ({ isActive, title, data, onCancel }: AddOrUpdateSchoo
   const [form] = Form.useForm();
   const dispatch = useAppDispatch();
   const { isLoading, withLoading } = useLoading();
-  const [startDate, setStartDate] = useState<dayjs.Dayjs>(dayjs());
-  const [fileData, setFileData] = useState<any>(null);
-
-  /** handle change date */
-  const handleDateChange: DatePickerProps['onChange'] = (date: any, name) => {
-    setStartDate(date);
-    console.log('date', date);
-  };
 
   const handleCancelModal = () => {
     onCancel(false);
@@ -49,48 +27,35 @@ const AddOrUpdateSchool = ({ isActive, title, data, onCancel }: AddOrUpdateSchoo
   };
 
   const handleSubmit = async (values: any) => {
-    const combinedValues = { ...values, fileData };
     await withLoading(async () => {
       try {
-        const res = await createSchoolAPI(values);
-
+        if (data?.id) {
+          await updateSChoolAPI({ ...values, isDelete: false, accountId: authUser?.id, id: data?.id });
+          message.success('Cập nhật trường học thành công');
+        } else {
+          await createSchoolAPI({ ...values, isDelete: false, accountId: authUser?.id });
+          message.success('Tạo trường học thành công');
+        }
         dispatch(triggerLoadingSchool());
-        message.success('Tạo trường học thành công');
+
         handleCancelModal();
       } catch (error: any) {
-        message.error(error?.message);
+        message.error(error?.error || error?.message);
       }
     });
   };
 
-  const handleFileChange = (info: any) => {
-    if (info.file.status !== 'uploading') {
-      console.log(info.file, info.fileList);
+  useEffect(() => {
+    if (data?.id) {
+      const initialForm = {
+        name: data?.name,
+        email: data?.email,
+        address: data?.address,
+        phoneNumber: data?.phoneNumber,
+      };
+      form.setFieldsValue(initialForm);
     }
-    if (info.file.status === 'done') {
-      setFileData(info.file.response);
-      message.success(`${info.file.name} file uploaded successfully`);
-    } else if (info.file.status === 'error') {
-      message.error(`${info.file.name} file upload failed.`);
-    }
-  };
-
-  const props: UploadProps = {
-    // name: 'file',
-    // action: 'https://660d2bd96ddfa2943b33731c.mockapi.io/api/upload',
-    // headers: {
-    //   authorization: 'authorization-text',
-    // },
-    onChange: handleFileChange,
-    progress: {
-      strokeColor: {
-        '0%': '#108ee9',
-        '100%': '#87d068',
-      },
-      strokeWidth: 3,
-      format: (percent) => percent && `${parseFloat(percent.toFixed(2))}%`,
-    },
-  };
+  }, [isActive]);
 
   return (
     <Modal
@@ -99,7 +64,11 @@ const AddOrUpdateSchool = ({ isActive, title, data, onCancel }: AddOrUpdateSchoo
       destroyOnClose={true}
       closeIcon={<XCircleIcon />}
       centered
-      title={<Typography.Title className="title-header_modal">Nhập dữ liệu trường mới</Typography.Title>}
+      title={
+        <Typography.Title className="title-header_modal">
+          {data?.id ? 'Cập nhật trường học' : 'Tạo trường học mới'}
+        </Typography.Title>
+      }
       open={isActive}
       onCancel={handleCancelModal}
       className="modal-school-management__container"
@@ -111,67 +80,74 @@ const AddOrUpdateSchool = ({ isActive, title, data, onCancel }: AddOrUpdateSchoo
           </Col>
           <Col span={24}>
             <Form.Item
-              label="Mã trường học :"
-              name="code"
-              required={true}
-              rules={[
-                {
-                  required: true,
-                  message: 'Mã trường học không được trống',
-                },
-              ]}
-            >
-              <InputUI placeholder="Nhập mã trường học" />
-            </Form.Item>
-          </Col>
-
-          <Col span={24}>
-            <Form.Item
               label="Tên trường học :"
               name="name"
               required={true}
               rules={[
                 {
                   required: true,
-                  message: 'Tên trường học không được để trống',
+                  message: 'Tên trường học không được trống',
                 },
               ]}
             >
               <InputUI placeholder="Nhập tên trường học" />
             </Form.Item>
           </Col>
+
           <Col span={24}>
             <Form.Item
-              label="Ngày ký hợp đồng"
-              name="dateContract"
+              label="Email trường học :"
+              name="email"
               required={true}
               rules={[
                 {
                   required: true,
-                  message: 'Ngày ký hợp đồng không được để trống',
+                  message: 'Email trường học không được để trống',
                 },
               ]}
             >
-              <DatePickerUI
-                placeholder="Nhập ngày ký hợp đồng"
-                allowClear={false}
-                picker="date"
-                value={startDate}
-                format={'DD/MM/YYYY'}
-                onChange={handleDateChange}
-              />
+              <InputUI placeholder="Nhập email trường học" />
             </Form.Item>
           </Col>
           <Col span={24}>
-            <Upload {...props} style={{ width: '100%' }}>
-              <Button style={{ width: '100%' }} className="btn-upload" icon={<UploadOutlined />}>
-                Upload hợp đồng đã ký
-              </Button>
-            </Upload>
+            <Form.Item
+              label="Địa chỉ trường học"
+              name="address"
+              required={true}
+              rules={[
+                {
+                  required: true,
+                  message: 'Địa chỉ trường học không được để trống',
+                },
+              ]}
+            >
+              <InputUI placeholder="Nhập địa chỉ trường học" />
+            </Form.Item>
           </Col>
+
+          <Col span={24}>
+            <Form.Item
+              label="Số điện thoại trường học"
+              name="phoneNumber"
+              required={true}
+              rules={[
+                {
+                  required: true,
+                  message: 'Số điện thoại trường học không được để trống',
+                },
+                {
+                  pattern: /^[0-9]+$/,
+                  message: 'Số điện thoại chỉ được chứa các ký tự số từ 0 đến 9',
+                },
+              ]}
+            >
+              <InputUI placeholder="Nhập số điện thoại trường học" />
+            </Form.Item>
+          </Col>
+
           <Col span={24} className="mt-24">
             <Button loading={isLoading} icon={<PlusIcon />} htmlType="submit" className="btn btn-primary">
-              Thêm trường học
+              {data?.id ? 'Cập nhật' : 'Thêm trường học'}
             </Button>
           </Col>
         </Row>

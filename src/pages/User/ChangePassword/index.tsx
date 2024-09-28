@@ -33,8 +33,8 @@ const ChangePassword = ({ isActive, title, data, onCancel }: ChangePasswordProps
         await changePasswordAPI(params);
         message.success('Thay đổi mật khẩu thành công');
         handleCancelModal();
-      } catch (error) {
-        message.error('Đã có lỗi xảy ra khi thay đổi mật khẩu');
+      } catch (error: any) {
+        message.error(error?.message);
       }
     });
   };
@@ -84,7 +84,7 @@ const ChangePassword = ({ isActive, title, data, onCancel }: ChangePasswordProps
               rules={[
                 {
                   required: true,
-                  message: 'Mật khẩu mới không được trống',
+                  message: 'Nhập lại mật khẩu không được trống',
                 },
                 {
                   pattern: /^[^-\s]{6,30}$/,

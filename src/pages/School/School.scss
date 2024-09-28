@@ -11,3 +11,25 @@
     }
   }
 }
+
+/* Invest Equipment */
+.invest-management_container {
+  width: 100%;
+
+  .invest-header-management {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+  }
+}
+
+.txt_contract {
+  color: var(--info-primary, #0d6cf2);
+  font-weight: 600;
+  font-size: 16px;
+  font-style: normal;
+  line-height: normal;
+}
+
+/* Lits contract */

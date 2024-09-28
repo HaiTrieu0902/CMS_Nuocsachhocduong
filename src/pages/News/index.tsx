@@ -6,60 +6,148 @@ import {
   InputUI,
   PencilIcon,
   PlusIcon,
+  PopupConfirm,
   SearchIcon,
+  TooltipCell,
   TrashIcon,
 } from '@/components';
-import { history, useModel } from '@umijs/max';
-import { Button, Col, Form, Row, Table } from 'antd';
+import { DEFAULT_PAGE_NUMBER, DEFAULT_SIZE_PAGE, defaultTableParams } from '@/constants';
+import useLoading from '@/hooks/useLoading';
+import useModal from '@/hooks/useModal';
+import { IGetListParamCommon, TableParams } from '@/models/common.model';
+import { INews } from '@/models/news.model';
+import { deleteNewsAPI, getListNewsAPI } from '@/services/api/new';
+import { history } from '@umijs/max';
+import { Button, Col, Form, Row, Table, TableColumnsType, message } from 'antd';
 import { DatePickerProps } from 'antd/lib';
 import dayjs from 'dayjs';
 import React, { useEffect, useState } from 'react';
 import './News.scss';
 
 const NewsManagement: React.FC = () => {
-  const { setInitialState } = useModel('@@initialState');
   const [form] = Form.useForm();
+  const { stateModal: confirmState, toggleModal: toggleConfirmModal, offModal: offConfirmModal } = useModal();
+  const { isLoading, withLoading } = useLoading();
   const currentDate = dayjs();
   const tempStartMonth = dayjs().month(currentDate.month()).date(currentDate.date());
   const [startMonth, setStartMonth] = useState<dayjs.Dayjs>(tempStartMonth);
+  const [listNews, setListNews] = useState<INews[]>([]);
+  const [tableParams, setTableParams] = useState<TableParams>({
+    pagination: defaultTableParams,
+  });
 
-  const handleNavigator = () => {
-    history.push(`/news/create`);
+  const [searchParams, setSearchParams] = useState<IGetListParamCommon>({
+    pageSize: DEFAULT_SIZE_PAGE,
+    page: DEFAULT_PAGE_NUMBER,
+    search: '',
+  });
+
+  /** handle navigator */
+  const handleNavigator = (id: string | null) => {
+    if (id) {
+      history.push(`/news/${id}`);
+    } else {
+      history.push(`/news/create`);
+    }
   };
   /** handle change date */
   const handleDateChange: DatePickerProps['onChange'] = (date: any, name) => {
     setStartMonth(date);
-    console.log('date', date);
+  };
+
+  /** handle Table Change */
+  const handleTableChange = (pagination: any) => {
+    setTableParams({
+      ...tableParams,
+      pagination,
+    });
+    setSearchParams((prevParams) => ({
+      ...prevParams,
+      page: pagination.current,
+      pageSize: pagination.pageSize,
+    }));
+  };
+
+  /** handle get list news */
+  const handleGetListNews = async (values: IGetListParamCommon) => {
+    await withLoading(async () => {
+      try {
+        const res = await getListNewsAPI(values);
+        setListNews(res?.data);
+        setTableParams({
+          ...tableParams,
+          pagination: {
+            ...tableParams.pagination,
+            current: values.page,
+            total: res.total,
+          },
+        });
+      } catch (error: any) {
+        message.error(error?.message);
+      }
+    });
   };
 
   /** handle submit */
-  const handleSubmit = () => {};
+  const handleSubmitSearchNews = async (values: any) => {
+    setSearchParams((prevParams) => ({
+      ...prevParams,
+      page: DEFAULT_PAGE_NUMBER,
+      search: values?.search || '',
+    }));
+  };
+
+  /** handleOnSubmitDelete */
+  const handleOnSubmitDelete = async (row: INews) => {
+    try {
+      if (row?.id) await deleteNewsAPI(row?.id);
+      message.success('Xóa tin tức thành công');
+    } catch (error: any) {
+      message.error(error?.message);
+    }
+  };
 
   /** config data */
-  const columns = [
+  const columns: TableColumnsType<INews> = [
     {
       title: 'STT',
-      dataIndex: 'stt',
       key: 'stt',
       width: '8%',
+      render: (text, row, index) => {
+        return <TooltipCell content={`${(index + 1).toString()}`} />;
+      },
     },
     {
       title: 'Tiêu đề tin tức',
       dataIndex: 'title',
       key: 'title',
       width: '20%',
+      render: (text, row) => {
+        return <TooltipCell title={row?.title} content={row?.title} />;
+      },
     },
     {
       title: 'Ngày đăng tin ',
       dataIndex: 'date',
       key: 'date',
       width: '20%',
+      render: (text, row) => {
+        return <TooltipCell title={row?.createdAt} content={row?.createdAt} isDate />;
+      },
     },
     {
       title: 'Phân loại tin tức',
       dataIndex: 'notification',
       key: 'notification',
       width: '42%',
+      render: (text, row) => {
+        return (
+          <TooltipCell
+            title={`${row?.type === true ? 'Tin tức nổi bật ' : 'Tin tức thường ngày'}`}
+            content={`${row?.type === true ? 'Tin tức nổi bật ' : 'Tin tức thường ngày'}`}
+          />
+        );
+      },
     },
     {
       title: 'Thao tác',
@@ -67,11 +155,11 @@ const NewsManagement: React.FC = () => {
       key: 'action',
       width: '10%',
       render: (text: any, row: any) => (
-        <Row gutter={[8, 10]}>
-          <Col>
-            <PencilIcon />
+        <Row gutter={[8, 10]} justify={'center'}>
+          <Col className="pointer" onClick={() => handleNavigator(row?.id || '')}>
+            <PencilIcon></PencilIcon>
           </Col>
-          <Col>
+          <Col className="pointer" onClick={toggleConfirmModal(true, 'delete', row)}>
             <TrashIcon />
           </Col>
         </Row>
@@ -82,50 +170,21 @@ const NewsManagement: React.FC = () => {
     },
   ];
 
-  const dataSource = [
-    {
-      key: '1',
-      stt: 1,
-      title: 'Thông báo 1',
-      date: '2024-05-01',
-      notification: 'Tin tức nổi bật',
-      action: 'Edit/Delete',
-    },
-    {
-      key: '2',
-      stt: 2,
-      title: 'Thông báo 2',
-      date: '2024-05-02',
-      notification: 'Tin tức nổi bật',
-      action: 'Edit/Delete',
-    },
-    {
-      key: '3',
-      stt: 3,
-      title: 'Thông báo 3',
-      date: '2024-05-03',
-      notification: 'Tin tức nổi bật',
-      action: 'Edit/Delete',
-    },
-  ];
+  /** Use Effect */
 
   useEffect(() => {
-    form.setFieldValue('date', startMonth);
-    setInitialState((s: any) => ({
-      ...s,
-      data: 'TIN TỨC',
-    }));
-  }, []);
+    handleGetListNews(searchParams);
+  }, [searchParams]);
 
   return (
     <Row className="news-management_container">
       <Breadcrumb title="Tin Tức" />
       <Container>
-        <Form form={form} layout="vertical" className="news-management_form" onFinish={handleSubmit}>
+        <Form form={form} layout="vertical" className="news-management_form" onFinish={handleSubmitSearchNews}>
           <Row gutter={[16, 12]}>
             <Col span={5}>
-              <Form.Item label="Tiêu đề tin tức" name="title" required={false}>
-                <InputUI placeholder="Tiêu đề tin tức" />
+              <Form.Item label="Tiêu đề tin tức" name="search" required={false}>
+                <InputUI placeholder="Tiêu đề tin tức" allowClear />
               </Form.Item>
             </Col>
             <Col span={5}>
@@ -136,6 +195,7 @@ const NewsManagement: React.FC = () => {
                   value={dayjs(startMonth)}
                   format={'MM/YYYY'}
                   onChange={handleDateChange}
+                  placeholder="Chọn tháng / năm"
                 />
               </Form.Item>
             </Col>
@@ -147,7 +207,7 @@ const NewsManagement: React.FC = () => {
               </Button>
             </Col>
             <Col span={4}>
-              <Button icon={<PlusIcon />} onClick={handleNavigator} className="btn btn-add">
+              <Button icon={<PlusIcon />} onClick={() => handleNavigator(null)} className="btn btn-add">
                 Thêm tin tức
               </Button>
             </Col>
@@ -156,14 +216,30 @@ const NewsManagement: React.FC = () => {
       </Container>
       <Container className="mt-24">
         <Table
-          dataSource={dataSource}
+          dataSource={listNews?.length > 0 ? (listNews as never) : []}
+          rowKey={(record: any) => record?.id}
           columns={columns}
-          pagination={false}
+          loading={isLoading}
+          pagination={tableParams.pagination}
+          onChange={handleTableChange}
           locale={{ emptyText: 'Chưa có dữ liệu' }}
           scroll={{ y: '60vh' }}
           showSorterTooltip={false}
         />
       </Container>
+
+      <PopupConfirm
+        onCancel={offConfirmModal}
+        isActive={confirmState.open}
+        data={confirmState?.data}
+        onSubmit={handleOnSubmitDelete}
+        onSuccess={() =>
+          handleGetListNews({
+            pageSize: tableParams?.pagination?.pageSize as number,
+            page: tableParams?.pagination?.current as number,
+          })
+        }
+      />
     </Row>
   );
 };

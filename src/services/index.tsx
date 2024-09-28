@@ -20,7 +20,6 @@ client.interceptors.request.use(
       config.url = newUrl;
     }
     const accessToken = localStorage.getItem('accessToken');
-    console.log('accessToken', accessToken);
     const cloneConfig = { ...config };
     if (accessToken && cloneConfig.headers) {
       cloneConfig.headers.authorization = `Bearer ${accessToken}`;

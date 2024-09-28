@@ -8,10 +8,12 @@ type FulfilledAction = ReturnType<GenericAsyncThunk['fulfilled']>;
 
 interface SchoolSlice {
   isLoadingListSchool: boolean;
+  nameSchool: string;
 }
 
 const initialState: SchoolSlice = {
   isLoadingListSchool: false,
+  nameSchool: '',
 };
 
 const schoolSlice = createSlice({
@@ -21,10 +23,13 @@ const schoolSlice = createSlice({
     triggerLoadingSchool: (state) => {
       state.isLoadingListSchool = !state.isLoadingListSchool;
     },
+    setNameSchool: (state, action) => {
+      state.nameSchool = action.payload;
+    },
   },
   extraReducers(builder) {},
 });
 
-export const { triggerLoadingSchool } = schoolSlice.actions;
+export const { triggerLoadingSchool, setNameSchool } = schoolSlice.actions;
 
 export default schoolSlice.reducer;

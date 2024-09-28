@@ -1,20 +1,22 @@
+import { initializeFCM } from '@/../firebase/fcmService';
+import { ETOKEN } from '@/constants/enum';
 import useLoading from '@/hooks/useLoading';
 import { IUser } from '@/models/auth.model';
 import { loginAPI } from '@/services/api/auth';
+import { createDeviceAPI } from '@/services/api/common';
 import { rulePassword } from '@/utils/validate';
 import { history, useModel } from '@umijs/max';
 import { Button, Form, Input, Typography, message } from 'antd';
-import React from 'react';
+import React, { useEffect } from 'react';
 import './Login.scss';
 
 const Login: React.FC = () => {
   const { setInitialState } = useModel('@@initialState');
   const { isLoading, withLoading } = useLoading();
-
   const handleSubmit = async (values: IUser) => {
     await withLoading(async () => {
       try {
-        const res = await loginAPI(values);
+        const res = await loginAPI({ ...values, deviceLogin: 'web' });
         if (res) {
           localStorage.setItem('accessToken', res?.data?.token);
           localStorage.setItem('auth', JSON.stringify(res?.data));
@@ -26,6 +28,11 @@ const Login: React.FC = () => {
               avatar: res?.data?.avatar,
             },
           }));
+          await createDeviceAPI({
+            accountId: res?.data?.id as never,
+            token: localStorage.getItem(ETOKEN.TOKEN_DEVICES) as never,
+            type: 'web',
+          });
           message.success('Đăng nhập thành công');
           setTimeout(() => {
             history.push('/');
@@ -36,6 +43,10 @@ const Login: React.FC = () => {
       }
     });
   };
+
+  useEffect(() => {
+    initializeFCM();
+  }, [localStorage.getItem(ETOKEN.TOKEN_DEVICES)]);
 
   return (
     <div className="container">
@@ -67,7 +78,7 @@ const Login: React.FC = () => {
             </Form.Item>
             <Form.Item className="formBtnLogin">
               <Button loading={isLoading} className="btn btnLogin mt-16" key="submit" htmlType="submit">
-                Đăng nhập
+                Đăng Nhập
               </Button>
             </Form.Item>
           </Form>

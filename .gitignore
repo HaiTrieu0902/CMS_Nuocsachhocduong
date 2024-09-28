@@ -8,7 +8,8 @@ _roadhog-api-doc
 
 # production
 /dist
-
+.env
+.env.development
 # misc
 .DS_Store
 npm-debug.log*

@@ -70,6 +70,17 @@ body {
   outline: none;
 }
 
+.btn_type2 {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 16px 12px;
+  color: white;
+  border-radius: 4px;
+  outline: none;
+}
+
 .btn-primary {
   background-color: var(--primary-dark);
 }
@@ -95,6 +106,44 @@ body {
   background-color: transparent;
 }
 
+.btn-error {
+  background-color: var(--error-regular);
+}
+
+.btn-error:hover {
+  color: white !important;
+  background-color: var(--error-regular) !important;
+  border-color: var(--error-regular) !important;
+}
+
+.btn-cancel {
+  background-color: var(--text-regular);
+}
+
+.btn-cancel:hover {
+  color: white !important;
+  background-color: var(--text-regular) !important;
+  border-color: var(--text-regular) !important;
+}
+.text_danger {
+  color: var(--error-regular);
+}
+.text_inprogress {
+  color: var(--infomation-regular);
+}
+.text_complete {
+  color: var(--primary-dark);
+}
+.text_pending {
+  color: var(--warning-regular);
+}
+.export_action-header-management {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-bottom: 10px;
+}
 .header-avatar__container {
   display: flex;
   flex-direction: row;
@@ -194,9 +243,29 @@ body {
 .-mb-20 {
   margin-bottom: -20px;
 }
+.-mb-32 {
+  margin-bottom: -20px;
+}
+.-mb-64 {
+  margin-bottom: -20px;
+}
 
 .mb-0 {
   margin-bottom: 0px !important;
+}
+
+.truncate {
+  display: -webkit-box;
+  max-height: 4.5em;
+  overflow: hidden;
+  line-height: 1.5em;
+  text-overflow: ellipsis;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+
+.disabled {
+  cursor: not-allowed;
 }
 
 ul,
@@ -213,9 +282,14 @@ a {
 .ant-menu-light.ant-menu-inline .ant-menu-item,
 .ant-menu-light > .ant-menu.ant-menu-inline .ant-menu-item {
   position: relative;
+  // padding-top: 12px;
+  // padding-bottom: 12px;
+  height: auto;
   // margin-bottom: 12px;
   // border-radius: 0px !important;
+  border-radius: 8px !important;
   .ant-pro-base-menu-inline-item-title .ant-pro-base-menu-inline-item-text {
+    padding: 12px 0;
     color: var(--text-dark);
     font-size: 16px;
     font-style: normal;
@@ -399,4 +473,14 @@ html *::-webkit-scrollbar-track {
   .ant-pro-sider-logo {
     display: none;
   }
+}
+
+.ant-select-single {
+  height: 32px;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.disable {
+  cursor: not-allowed;
 }
